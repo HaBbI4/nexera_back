@@ -1,0 +1,34 @@
+# Build stage
+FROM golang:1.26-alpine AS builder
+
+RUN apk add --no-cache git ca-certificates
+
+WORKDIR /build
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o nexera_back-telegram-bot ./cmd/telegram-bot
+
+# Production stage
+FROM alpine:latest
+
+RUN apk --no-cache add ca-certificates tzdata
+
+RUN adduser -D -s /bin/sh appuser
+
+WORKDIR /app
+
+RUN mkdir -p /app/logs && chown -R appuser:appuser /app/logs
+
+COPY --from=builder /build/nexera_back-telegram-bot .
+
+RUN chown appuser:appuser nexera_back-telegram-bot
+
+USER appuser
+
+# У бота нет HTTP-порта — он живет на long polling к Telegram API и Kafka consumer'е,
+# поэтому HEALTHCHECK/EXPOSE тут не нужны.
+CMD ["./nexera_back-telegram-bot"]

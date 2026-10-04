@@ -1,0 +1,174 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: nexera_back-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: nexera_back_db
+      POSTGRES_USER: nexera_back_user
+      POSTGRES_PASSWORD: nexera_back_pass
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U nexera_back_user -d nexera_back_db" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  migrate:
+    image: migrate/migrate:v4.17.1
+    container_name: nexera_back-migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./migrations:/migrations
+    command: [
+      "-path", "/migrations",
+      "-database", "postgres://nexera_back_user:nexera_back_pass@postgres:5432/nexera_back_db?sslmode=disable",
+      "up"
+    ]
+    restart: "no"
+
+  redis:
+    image: redis:7-alpine
+    container_name: nexera_back-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    hostname: zookeeper
+    container_name: nexera_back-zookeeper
+    restart: always
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeper-data:/var/lib/zookeeper/data
+      - zookeeper-logs:/var/lib/zookeeper/log
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    hostname: kafka
+    container_name: nexera_back-kafka
+    restart: always
+    depends_on:
+      - zookeeper
+    ports:
+      - "29092:29092"
+      - "9092:9092"
+      - "9101:9101"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
+      KAFKA_CONFLUENT_METRICS_ENABLE: 'true'
+      KAFKA_CONFLUENT_SUPPORT_CUSTOMER_ID: anonymous
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    healthcheck:
+      test: kafka-broker-api-versions --bootstrap-server kafka:29092
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: nexera_back-app
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - SERVER_HOST=0.0.0.0
+      - SERVER_PORT=8080
+      - SERVER_READ_TIMEOUT=15
+      - SERVER_WRITE_TIMEOUT=15
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=nexera_back_user
+      - DB_PASSWORD=nexera_back_pass
+      - DB_NAME=nexera_back_db
+      - DB_SSL_MODE=disable
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - LOG_LEVEL=info
+      - LOG_FORMAT=json
+      - MEDIA_DRIVER=local
+      - MEDIA_MAX_FILE_SIZE_MB=25
+      - MEDIA_LOCAL_PATH=/app/uploads
+      - KAFKA_BROKERS=kafka:29092
+      - KAFKA_GROUP_ID=detailing-crm
+      - KAFKA_TOPIC_ORDERS=orders
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    volumes:
+      - app-logs:/app/logs
+      - app-uploads:/app/uploads
+
+  telegram-bot:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.bot
+    container_name: nexera_back-telegram-bot
+    restart: always
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=nexera_back_user
+      - DB_PASSWORD=nexera_back_pass
+      - DB_NAME=nexera_back_db
+      - DB_SSL_MODE=disable
+      - LOG_LEVEL=info
+      - LOG_FORMAT=json
+      - KAFKA_BROKERS=kafka:29092
+      - KAFKA_GROUP_ID=telegram-bot
+      - KAFKA_TOPIC_ORDERS=orders
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+      kafka:
+        condition: service_healthy
+    volumes:
+      - bot-logs:/app/logs
+
+volumes:
+  postgres-data:
+  redis-data:
+  kafka-data:
+  zookeeper-data:
+  zookeeper-logs:
+  app-logs:
+  app-uploads:
+  bot-logs:

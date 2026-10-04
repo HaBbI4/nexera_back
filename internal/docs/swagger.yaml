@@ -1,0 +1,610 @@
+definitions:
+  internal_handlers.ErrorResponse:
+    properties:
+      error:
+        type: string
+      message:
+        type: string
+    type: object
+  internal_handlers.HealthResponse:
+    properties:
+      services:
+        additionalProperties:
+          type: string
+        type: object
+      status:
+        type: string
+      uptime:
+        type: string
+      version:
+        type: string
+    type: object
+  my-blog_internal_models.Car:
+    properties:
+      brand:
+        type: string
+      comment:
+        type: string
+      created_at:
+        type: string
+      customer_id:
+        type: integer
+      id:
+        type: integer
+      license_plate:
+        type: string
+      model:
+        type: string
+      updated_at:
+        type: string
+      vin:
+        type: string
+      year:
+        type: integer
+    type: object
+  my-blog_internal_models.CreateCustomerRequest:
+    properties:
+      comment:
+        type: string
+      email:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+    type: object
+  my-blog_internal_models.CreateOrderItemRequest:
+    properties:
+      comment:
+        type: string
+      price:
+        type: number
+      quantity:
+        type: integer
+      service_description:
+        type: string
+      service_id:
+        type: integer
+      service_is_active:
+        type: boolean
+      service_name:
+        type: string
+    type: object
+  my-blog_internal_models.CreateOrderRequest:
+    properties:
+      car_id:
+        type: integer
+      comment:
+        type: string
+      customer_id:
+        type: integer
+      items:
+        items:
+          $ref: '#/definitions/my-blog_internal_models.CreateOrderItemRequest'
+        type: array
+      scheduled_at:
+        type: string
+      status:
+        type: string
+    type: object
+  my-blog_internal_models.CreateServiceRequest:
+    properties:
+      description:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+    type: object
+  my-blog_internal_models.Customer:
+    properties:
+      comment:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      phone:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  my-blog_internal_models.Order:
+    properties:
+      car:
+        $ref: '#/definitions/my-blog_internal_models.Car'
+      car_id:
+        type: integer
+      comment:
+        type: string
+      completed_at:
+        type: string
+      created_at:
+        type: string
+      customer:
+        $ref: '#/definitions/my-blog_internal_models.Customer'
+      customer_id:
+        type: integer
+      id:
+        type: integer
+      items:
+        items:
+          $ref: '#/definitions/my-blog_internal_models.OrderItem'
+        type: array
+      media:
+        items:
+          $ref: '#/definitions/my-blog_internal_models.OrderMedia'
+        type: array
+      scheduled_at:
+        type: string
+      started_at:
+        type: string
+      status:
+        $ref: '#/definitions/my-blog_internal_models.OrderStatus'
+      total_amount:
+        type: number
+      updated_at:
+        type: string
+    type: object
+  my-blog_internal_models.OrderItem:
+    properties:
+      comment:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      order_id:
+        type: integer
+      price:
+        type: number
+      quantity:
+        type: integer
+      service_id:
+        type: integer
+      service_name:
+        type: string
+    type: object
+  my-blog_internal_models.OrderMedia:
+    properties:
+      comment:
+        type: string
+      created_at:
+        type: string
+      file_size:
+        type: integer
+      id:
+        type: integer
+      mime_type:
+        type: string
+      order_id:
+        type: integer
+      stage:
+        type: string
+      storage_key:
+        type: string
+      type:
+        type: string
+      url:
+        description: |-
+          URL постоянная публичная ссылка на файл, вычисляется на лету из StorageKey
+          текущим драйвером хранилища и не хранится в БД.
+        type: string
+    type: object
+  my-blog_internal_models.OrderStatus:
+    enum:
+    - created
+    - scheduled
+    - in_progress
+    - completed
+    - cancelled
+    type: string
+    x-enum-varnames:
+    - OrderStatusCreated
+    - OrderStatusScheduled
+    - OrderStatusInProgress
+    - OrderStatusCompleted
+    - OrderStatusCancelled
+  my-blog_internal_models.Service:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+info:
+  contact:
+    email: 911gtrss@gmail.com
+    name: API Support
+  description: |-
+    API для системы учета и записи автомобилей на детейлинг услуги.
+    Позволяет управлять клиентами, автомобилями, услугами и заказами.
+  license:
+    name: Proprietary
+  title: Detailing CRM API
+  version: "1.0"
+paths:
+  /api/v1/cars:
+    get:
+      description: Возвращает список автомобилей с пагинацией
+      parameters:
+      - description: Количество записей (по умолчанию 50, максимум 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Смещение (по умолчанию 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/my-blog_internal_models.Car'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handlers.ErrorResponse'
+      summary: Список автомобилей
+      tags:
+      - cars
+  /api/v1/cars/{id}:
+    get:
+      description: Возвращает автомобиль по ID
+      parameters:
+      - description: ID автомобиля
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-blog_internal_models.Car'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handlers.ErrorResponse'
+      summary: Получить автомобиль
+      tags:
+      - cars
+  /api/v1/customers:
+    get:
+      description: Возвращает список клиентов с пагинацией
+      parameters:
+      - description: Количество записей (по умолчанию 50, максимум 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Смещение (по умолчанию 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/my-blog_internal_models.Customer'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handlers.ErrorResponse'
+      summary: Список клиентов
+      tags:
+      - customers
+    post:
+      consumes:
+      - application/json
+      description: Создает нового клиента
+      parameters:
+      - description: Данные клиента
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/my-blog_internal_models.CreateCustomerRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/my-blog_internal_models.Customer'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handlers.ErrorResponse'
+      summary: Создать клиента
+      tags:
+      - customers
+  /api/v1/customers/{id}:
+    get:
+      description: Возвращает клиента по ID
+      parameters:
+      - description: ID клиента
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-blog_internal_models.Customer'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handlers.ErrorResponse'
+      summary: Получить клиента
+      tags:
+      - customers
+  /api/v1/orders:
+    get:
+      description: Возвращает список заказов с автомобилем, клиентом, услугами и медиа
+      parameters:
+      - description: Количество записей (по умолчанию 50, максимум 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Смещение (по умолчанию 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/my-blog_internal_models.Order'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handlers.ErrorResponse'
+      summary: Список заказов
+      tags:
+      - orders
+    post:
+      consumes:
+      - application/json
+      description: Создает заказ с услугами. В каждом item указывается либо service_id
+        (существующая услуга), либо service_name (+ опционально service_description,
+        service_is_active) для создания новой услуги на лету.
+      parameters:
+      - description: Данные заказа
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/my-blog_internal_models.CreateOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/my-blog_internal_models.Order'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handlers.ErrorResponse'
+      summary: Создать заказ
+      tags:
+      - orders
+  /api/v1/orders/{id}:
+    get:
+      description: Возвращает заказ по ID вместе с автомобилем, клиентом, услугами
+        и медиа
+      parameters:
+      - description: ID заказа
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-blog_internal_models.Order'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handlers.ErrorResponse'
+      summary: Получить заказ
+      tags:
+      - orders
+  /api/v1/orders/{id}/media:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Загружает фото/видео к уже созданному заказу (до 10 файлов за запрос)
+      parameters:
+      - description: ID заказа
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 'Этап съемки: before или after (по умолчанию before)'
+        in: formData
+        name: stage
+        type: string
+      - description: Файлы (фото/видео)
+        in: formData
+        name: files
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            items:
+              $ref: '#/definitions/my-blog_internal_models.OrderMedia'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handlers.ErrorResponse'
+        "415":
+          description: Unsupported Media Type
+          schema:
+            $ref: '#/definitions/internal_handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handlers.ErrorResponse'
+      summary: Добавить медиа к заказу
+      tags:
+      - orders
+  /api/v1/services:
+    post:
+      consumes:
+      - application/json
+      description: Создает новую услугу в каталоге
+      parameters:
+      - description: Данные услуги
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/my-blog_internal_models.CreateServiceRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/my-blog_internal_models.Service'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handlers.ErrorResponse'
+      summary: Создать услугу
+      tags:
+      - services
+  /health:
+    get:
+      description: Проверяет состояние базы данных, Redis и других зависимостей
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handlers.HealthResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/internal_handlers.HealthResponse'
+      summary: Health check
+      tags:
+      - health
+  /health/liveness:
+    get:
+      description: Проверяет, что процесс приложения жив
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Liveness check
+      tags:
+      - health
+  /health/readiness:
+    get:
+      description: Проверяет готовность приложения обрабатывать запросы (БД и Redis
+        доступны)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/internal_handlers.ErrorResponse'
+      summary: Readiness check
+      tags:
+      - health
+schemes:
+- http
+- https
+swagger: "2.0"
