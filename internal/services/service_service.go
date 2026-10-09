@@ -30,21 +30,23 @@ func (svc *ServiceService) CreateService(req *models.CreateServiceRequest) (*mod
 	service := &models.Service{
 		Name:        req.Name,
 		Description: req.Description,
-		IsActive:    req.IsActive,
+		Price:       req.Price,
+		Position:    req.Position,
+		IsPublished: req.IsPublished,
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
 
 	query := `
-		INSERT INTO services (name, description, is_active, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO services (name, description, price, position, is_published, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		RETURNING id
 	`
 
 	err := svc.db.QueryRow(
 		query,
 		service.Name, service.Description,
-		service.IsActive,
+		service.Price, service.Position, service.IsPublished,
 		service.CreatedAt, service.UpdatedAt,
 	).Scan(&service.ID)
 	if err != nil {
@@ -52,9 +54,9 @@ func (svc *ServiceService) CreateService(req *models.CreateServiceRequest) (*mod
 	}
 
 	svc.log.WithFields(map[string]interface{}{
-		"service_id":        service.ID,
-		"service_name":      service.Name,
-		"service_is_active": service.IsActive,
+		"service_id":           service.ID,
+		"service_name":         service.Name,
+		"service_is_published": service.IsPublished,
 	}).Info("created new service")
 
 	return service, nil

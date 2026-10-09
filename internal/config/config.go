@@ -15,6 +15,7 @@ type Config struct {
 	Media    MediaConfig    `json:"media"`
 	Kafka    KafkaConfig    `json:"kafka"`
 	Telegram TelegramConfig `json:"telegram"`
+	Auth     AuthConfig     `json:"auth"`
 }
 
 // ServerConfig конфигурация HTTP сервера
@@ -101,6 +102,14 @@ type TelegramConfig struct {
 	BotToken string `json:"-"`
 }
 
+// AuthConfig конфигурация JWT-аутентификации админ-панели
+type AuthConfig struct {
+	// JWTSecret секрет для подписи токенов. Обязателен — приложение не должно запускаться без него.
+	JWTSecret string `json:"-"`
+	// JWTTTLMinutes время жизни токена в минутах
+	JWTTTLMinutes int `json:"jwt_ttl_minutes"`
+}
+
 // Load загружает конфигурацию из переменных окружения
 func Load() *Config {
 	cfg := &Config{
@@ -154,6 +163,10 @@ func Load() *Config {
 		},
 		Telegram: TelegramConfig{
 			BotToken: getEnv("TELEGRAM_BOT_TOKEN", ""),
+		},
+		Auth: AuthConfig{
+			JWTSecret:     getEnv("JWT_SECRET", ""),
+			JWTTTLMinutes: getEnvAsInt("JWT_TTL_MINUTES", 1440),
 		},
 	}
 

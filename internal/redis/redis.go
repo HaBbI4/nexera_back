@@ -161,4 +161,5 @@ const (
 	KeyPrefixCar      = "car"
 	KeyPrefixService  = "service"
 	KeyPrefixCustomer = "customer"
+	KeyPrefixBanner   = "banner"
 )

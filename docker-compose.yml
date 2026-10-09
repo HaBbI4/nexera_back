@@ -4,9 +4,9 @@ services:
     container_name: nexera_back-postgres
     restart: always
     environment:
-      POSTGRES_DB: nexera_back_db
-      POSTGRES_USER: nexera_back_user
-      POSTGRES_PASSWORD: nexera_back_pass
+      POSTGRES_DB: nexera
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: nexerapass
     ports:
       - "5433:5432"
     volumes:

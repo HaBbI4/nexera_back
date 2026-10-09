@@ -10,5 +10,5 @@ CREATE TABLE telegram_users (
 );
 
 -- Один Telegram-чат не может быть добавлен дважды
-CREATE UNIQUE INDEX idx_telegram_users_chat_id
-    ON telegram_users(chat_id);
+CREATE UNIQUE INDEX telegram_users_chat_id_uq
+    ON telegram_users (chat_id);

@@ -1,2 +1,0 @@
-DROP TABLE IF EXISTS leads;
-DROP TYPE IF EXISTS lead_status;
