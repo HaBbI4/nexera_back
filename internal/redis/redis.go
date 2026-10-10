@@ -150,6 +150,23 @@ func (c *Client) Health(ctx context.Context) error {
 	return err
 }
 
+// IncrementWithTTL увеличивает счетчик key на 1 и возвращает новое значение и оставшееся
+// время жизни ключа. TTL window задается только при создании ключа (EXPIRE NX, Redis 7+),
+// поэтому окно фиксированное: отсчитывается от первого запроса, а не продлевается каждым
+// следующим. INCR и EXPIRE идут одной транзакцией — ключ не может остаться без TTL навсегда.
+func (c *Client) IncrementWithTTL(ctx context.Context, key string, window time.Duration) (int64, time.Duration, error) {
+	pipe := c.client.TxPipeline()
+	incr := pipe.Incr(ctx, key)
+	pipe.ExpireNX(ctx, key, window)
+	ttl := pipe.TTL(ctx, key)
+
+	if _, err := pipe.Exec(ctx); err != nil {
+		return 0, 0, fmt.Errorf("failed to increment key %s: %w", key, err)
+	}
+
+	return incr.Val(), ttl.Val(), nil
+}
+
 // GenerateKey генерирует ключ для кэша
 func GenerateKey(prefix, id string) string {
 	return fmt.Sprintf("%s:%s", prefix, id)

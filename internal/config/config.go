@@ -16,6 +16,7 @@ type Config struct {
 	Kafka    KafkaConfig    `json:"kafka"`
 	Telegram TelegramConfig `json:"telegram"`
 	Auth     AuthConfig     `json:"auth"`
+	Spam     SpamConfig     `json:"spam"`
 }
 
 // ServerConfig конфигурация HTTP сервера
@@ -110,6 +111,30 @@ type AuthConfig struct {
 	JWTTTLMinutes int `json:"jwt_ttl_minutes"`
 }
 
+// SpamConfig конфигурация защиты публичных форм (заявки, отзывы) от спама
+type SpamConfig struct {
+	// TrustedProxies адреса или подсети (CIDR) прокси перед приложением (nginx), которым
+	// можно верить в заголовке X-Forwarded-For. Запрос не от доверенного прокси —
+	// IP клиента берется из самого соединения, заголовок игнорируется.
+	TrustedProxies []string `json:"trusted_proxies"`
+
+	// LeadRateLimit / ReviewRateLimit — сколько POST-запросов можно сделать с одного IP за окно.
+	LeadRateLimit   RateLimitConfig `json:"lead_rate_limit"`
+	ReviewRateLimit RateLimitConfig `json:"review_rate_limit"`
+
+	// LeadDuplicateWindowMinutes / ReviewDuplicateWindowMinutes — в течение какого времени
+	// повторная заявка/отзыв с тем же телефоном отклоняется. 0 — проверка отключена.
+	LeadDuplicateWindowMinutes   int `json:"lead_duplicate_window_minutes"`
+	ReviewDuplicateWindowMinutes int `json:"review_duplicate_window_minutes"`
+}
+
+// RateLimitConfig ограничение частоты запросов: не больше MaxRequests за WindowMinutes.
+// MaxRequests <= 0 — ограничение отключено.
+type RateLimitConfig struct {
+	MaxRequests   int `json:"max_requests"`
+	WindowMinutes int `json:"window_minutes"`
+}
+
 // Load загружает конфигурацию из переменных окружения
 func Load() *Config {
 	cfg := &Config{
@@ -168,6 +193,19 @@ func Load() *Config {
 			JWTSecret:     getEnv("JWT_SECRET", ""),
 			JWTTTLMinutes: getEnvAsInt("JWT_TTL_MINUTES", 1440),
 		},
+		Spam: SpamConfig{
+			TrustedProxies: getEnvAsList("TRUSTED_PROXIES", "127.0.0.1,::1"),
+			LeadRateLimit: RateLimitConfig{
+				MaxRequests:   getEnvAsInt("LEAD_RATE_LIMIT_MAX", 5),
+				WindowMinutes: getEnvAsInt("LEAD_RATE_LIMIT_WINDOW_MINUTES", 10),
+			},
+			ReviewRateLimit: RateLimitConfig{
+				MaxRequests:   getEnvAsInt("REVIEW_RATE_LIMIT_MAX", 3),
+				WindowMinutes: getEnvAsInt("REVIEW_RATE_LIMIT_WINDOW_MINUTES", 60),
+			},
+			LeadDuplicateWindowMinutes:   getEnvAsInt("LEAD_DUPLICATE_WINDOW_MINUTES", 10),
+			ReviewDuplicateWindowMinutes: getEnvAsInt("REVIEW_DUPLICATE_WINDOW_MINUTES", 1440),
+		},
 	}
 
 	return cfg
@@ -188,4 +226,16 @@ func getEnvAsInt(key string, defaultValue int) int {
 		return value
 	}
 	return defaultValue
+}
+
+// getEnvAsList получает значение переменной окружения как список через запятую; пустые
+// элементы отбрасываются, так что пустая переменная — пустой список.
+func getEnvAsList(key, defaultValue string) []string {
+	var result []string
+	for _, item := range strings.Split(getEnv(key, defaultValue), ",") {
+		if item = strings.TrimSpace(item); item != "" {
+			result = append(result, item)
+		}
+	}
+	return result
 }

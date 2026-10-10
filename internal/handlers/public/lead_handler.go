@@ -41,6 +41,7 @@ func NewLeadHandler(leadService *services.LeadService, log *logger.Logger) *Lead
 // @Param        lead  body      models.CreateLeadRequest  true  "Данные заявки"
 // @Success      201  {object}  models.Lead
 // @Failure      400  {object}  httpresponse.ErrorResponse
+// @Failure      429  {object}  httpresponse.ErrorResponse
 // @Failure      500  {object}  httpresponse.ErrorResponse
 // @Router       /api/v1/leads [post]
 func (h *LeadHandler) CreateLead(w http.ResponseWriter, r *http.Request) {
@@ -60,6 +61,11 @@ func (h *LeadHandler) CreateLead(w http.ResponseWriter, r *http.Request) {
 	lead, err := h.leadService.Create(req)
 	if err != nil {
 		switch {
+		case errors.Is(err, services.ErrSpamDetected):
+			// Бот получает обычный успешный ответ и не узнает, что заявка не сохранена.
+			httpresponse.WriteJSON(w, http.StatusCreated, struct{}{})
+		case errors.Is(err, services.ErrDuplicateSubmission):
+			httpresponse.WriteError(w, http.StatusTooManyRequests, httpresponse.TooManyRequestsMessage)
 		case errors.Is(err, services.ErrInvalidLead):
 			httpresponse.WriteError(w, http.StatusBadRequest, err.Error())
 		case errors.Is(err, repository.ErrServiceNotFound):

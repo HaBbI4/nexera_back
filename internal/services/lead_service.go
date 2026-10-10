@@ -16,14 +16,14 @@ import (
 // обработчик по нему отличает "клиент прислал некорректные данные" (400) от прочих ошибок.
 var ErrInvalidLead = errors.New("invalid lead")
 
-// leadPhonePattern повторяет CHECK (phone ~ '^\+[1-9][0-9]{6,14}$') из миграции
-// 008_create_leads (формат E.164) — чтобы некорректный телефон был 400 от сервиса,
-// а не 500 от Postgres.
-var leadPhonePattern = regexp.MustCompile(`^\+[1-9][0-9]{6,14}$`)
+// phonePattern повторяет CHECK (phone ~ '^\+[1-9][0-9]{6,14}$') из миграций
+// 008_create_leads и 005_create_reviews (формат E.164) — чтобы некорректный телефон
+// был 400 от сервиса, а не 500 от Postgres. Общий для заявок и отзывов.
+var phonePattern = regexp.MustCompile(`^\+[1-9][0-9]{6,14}$`)
 
-// leadPhoneFormatting — символы, которыми люди обычно разделяют цифры телефона в форме
+// phoneFormatting — символы, которыми люди обычно разделяют цифры телефона в форме
 // ("+7 (999) 123-45-67"); перед проверкой формата они вырезаются.
-var leadPhoneFormatting = strings.NewReplacer(" ", "", "-", "", "(", "", ")", "")
+var phoneFormatting = strings.NewReplacer(" ", "", "-", "", "(", "", ")", "")
 
 const (
 	// defaultLeadSource соответствует DEFAULT 'contact_form' колонки leads.source.
@@ -39,14 +39,18 @@ const (
 // LeadService представляет сервис для работы с заявками клиентов.
 type LeadService struct {
 	repo repository.LeadRepository
-	log  *logger.Logger
+	// duplicateWindow — в течение какого времени повторная заявка с тем же телефоном
+	// отклоняется (ErrDuplicateSubmission); 0 — проверка отключена.
+	duplicateWindow time.Duration
+	log             *logger.Logger
 }
 
 // NewLeadService создает новый сервис для работы с заявками.
-func NewLeadService(repo repository.LeadRepository, log *logger.Logger) *LeadService {
+func NewLeadService(repo repository.LeadRepository, duplicateWindow time.Duration, log *logger.Logger) *LeadService {
 	return &LeadService{
-		repo: repo,
-		log:  log,
+		repo:            repo,
+		duplicateWindow: duplicateWindow,
+		log:             log,
 	}
 }
 
@@ -89,11 +93,19 @@ func (svc *LeadService) GetByID(id int) (*models.Lead, error) {
 // пробелы по краям обрезаются, из телефона убираются пробелы/скобки/дефисы, пустые
 // необязательные поля (email, message) считаются не заполненными, а пустой source
 // заменяется на contact_form (как DEFAULT в БД).
+//
+// Защита от спама: заполненное honeypot-поле — ErrSpamDetected (ничего не сохраняется),
+// заявка с тем же телефоном в пределах duplicateWindow — ErrDuplicateSubmission.
 func (svc *LeadService) Create(req models.CreateLeadRequest) (*models.Lead, error) {
+	if req.Website != "" {
+		svc.log.Warn("lead rejected: honeypot field filled")
+		return nil, ErrSpamDetected
+	}
+
 	lead := &models.Lead{
 		ServiceID: req.ServiceID,
 		Name:      strings.TrimSpace(req.Name),
-		Phone:     leadPhoneFormatting.Replace(strings.TrimSpace(req.Phone)),
+		Phone:     phoneFormatting.Replace(strings.TrimSpace(req.Phone)),
 		Email:     trimmedOrNil(req.Email),
 		Message:   trimmedOrNil(req.Message),
 		Source:    strings.TrimSpace(req.Source),
@@ -104,6 +116,17 @@ func (svc *LeadService) Create(req models.CreateLeadRequest) (*models.Lead, erro
 
 	if err := validateLead(lead); err != nil {
 		return nil, err
+	}
+
+	if svc.duplicateWindow > 0 {
+		exists, err := svc.repo.ExistsByPhoneSince(lead.Phone, time.Now().Add(-svc.duplicateWindow))
+		if err != nil {
+			return nil, err
+		}
+		if exists {
+			svc.log.Warn("lead rejected: duplicate phone within window")
+			return nil, ErrDuplicateSubmission
+		}
 	}
 
 	if err := svc.repo.Create(lead); err != nil {
@@ -137,7 +160,7 @@ func validateLead(l *models.Lead) error {
 		return fmt.Errorf("%w: name must be at most %d characters", ErrInvalidLead, maxLeadNameLength)
 	case l.Phone == "":
 		return fmt.Errorf("%w: phone is required", ErrInvalidLead)
-	case !leadPhonePattern.MatchString(l.Phone):
+	case !phonePattern.MatchString(l.Phone):
 		return fmt.Errorf("%w: phone must be in international format, e.g. +79991234567", ErrInvalidLead)
 	case l.Email != nil && len([]rune(*l.Email)) > maxLeadEmailLength:
 		return fmt.Errorf("%w: email must be at most %d characters", ErrInvalidLead, maxLeadEmailLength)

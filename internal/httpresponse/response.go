@@ -8,6 +8,11 @@ import (
 	"net/http"
 )
 
+// TooManyRequestsMessage — текст ответа 429 для публичных форм. Один и тот же и при
+// превышении лимита запросов с IP, и при повторной заявке/отзыве с тем же телефоном:
+// клиенту (и боту) не нужно знать, какая именно проверка сработала.
+const TooManyRequestsMessage = "too many requests, please try again later"
+
 // ErrorResponse представляет единую структуру ответа с ошибкой для всех обработчиков API.
 type ErrorResponse struct {
 	Error   string `json:"error"`

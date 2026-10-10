@@ -71,6 +71,15 @@ func (f *fakeLeadRepository) Delete(id int) error {
 	return nil
 }
 
+func (f *fakeLeadRepository) ExistsByPhoneSince(phone string, since time.Time) (bool, error) {
+	for _, l := range f.leads {
+		if l.Phone == phone && !l.CreatedAt.Before(since) {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 func validLeadRequest() models.CreateLeadRequest {
 	return models.CreateLeadRequest{
 		Name:  "Иван",
@@ -80,7 +89,7 @@ func validLeadRequest() models.CreateLeadRequest {
 
 func TestLeadService_Create(t *testing.T) {
 	repo := newFakeLeadRepository()
-	svc := services.NewLeadService(repo, testLogger())
+	svc := services.NewLeadService(repo, 0, testLogger())
 
 	req := validLeadRequest()
 	req.ServiceID = ptr(1)
@@ -104,7 +113,7 @@ func TestLeadService_Create(t *testing.T) {
 }
 
 func TestLeadService_Create_Normalizes(t *testing.T) {
-	svc := services.NewLeadService(newFakeLeadRepository(), testLogger())
+	svc := services.NewLeadService(newFakeLeadRepository(), 0, testLogger())
 
 	lead, err := svc.Create(models.CreateLeadRequest{
 		Name:    "  Иван  ",
@@ -152,7 +161,7 @@ func TestLeadService_Create_Invalid(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			repo := newFakeLeadRepository()
-			svc := services.NewLeadService(repo, testLogger())
+			svc := services.NewLeadService(repo, 0, testLogger())
 
 			req := validLeadRequest()
 			tt.mutate(&req)
@@ -168,7 +177,7 @@ func TestLeadService_Create_Invalid(t *testing.T) {
 }
 
 func TestLeadService_Create_ServiceNotFound(t *testing.T) {
-	svc := services.NewLeadService(newFakeLeadRepository(), testLogger())
+	svc := services.NewLeadService(newFakeLeadRepository(), 0, testLogger())
 
 	req := validLeadRequest()
 	req.ServiceID = ptr(99)
@@ -180,7 +189,7 @@ func TestLeadService_Create_ServiceNotFound(t *testing.T) {
 
 func TestLeadService_List_PassesFilterToRepository(t *testing.T) {
 	repo := newFakeLeadRepository()
-	svc := services.NewLeadService(repo, testLogger())
+	svc := services.NewLeadService(repo, 0, testLogger())
 
 	from := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	to := time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC)
@@ -208,7 +217,7 @@ func TestLeadService_List_PassesFilterToRepository(t *testing.T) {
 }
 
 func TestLeadService_GetByID_NotFound(t *testing.T) {
-	svc := services.NewLeadService(newFakeLeadRepository(), testLogger())
+	svc := services.NewLeadService(newFakeLeadRepository(), 0, testLogger())
 
 	if _, err := svc.GetByID(99); !errors.Is(err, repository.ErrLeadNotFound) {
 		t.Fatalf("expected ErrLeadNotFound, got %v", err)
@@ -217,7 +226,7 @@ func TestLeadService_GetByID_NotFound(t *testing.T) {
 
 func TestLeadService_Delete(t *testing.T) {
 	repo := newFakeLeadRepository(&models.Lead{ID: 1, Name: "Иван", Phone: "+79991234567"})
-	svc := services.NewLeadService(repo, testLogger())
+	svc := services.NewLeadService(repo, 0, testLogger())
 
 	if err := svc.Delete(1); err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -228,9 +237,58 @@ func TestLeadService_Delete(t *testing.T) {
 }
 
 func TestLeadService_Delete_NotFound(t *testing.T) {
-	svc := services.NewLeadService(newFakeLeadRepository(), testLogger())
+	svc := services.NewLeadService(newFakeLeadRepository(), 0, testLogger())
 
 	if err := svc.Delete(99); !errors.Is(err, repository.ErrLeadNotFound) {
 		t.Fatalf("expected ErrLeadNotFound, got %v", err)
+	}
+}
+
+func TestLeadService_Create_HoneypotIsNotSaved(t *testing.T) {
+	repo := newFakeLeadRepository()
+	svc := services.NewLeadService(repo, 0, testLogger())
+
+	req := validLeadRequest()
+	req.Website = "http://spam.example"
+
+	if _, err := svc.Create(req); !errors.Is(err, services.ErrSpamDetected) {
+		t.Fatalf("expected ErrSpamDetected, got %v", err)
+	}
+	if len(repo.leads) != 0 {
+		t.Error("spam lead must not be saved")
+	}
+}
+
+func TestLeadService_Create_DuplicatePhoneWithinWindow(t *testing.T) {
+	repo := newFakeLeadRepository(&models.Lead{ID: 1, Phone: "+79991234567", CreatedAt: time.Now().Add(-5 * time.Minute)})
+	svc := services.NewLeadService(repo, 10*time.Minute, testLogger())
+
+	// Тот же телефон, но в другом формате — сравнение идет после нормализации.
+	req := validLeadRequest()
+	req.Phone = "+7 (999) 123-45-67"
+
+	if _, err := svc.Create(req); !errors.Is(err, services.ErrDuplicateSubmission) {
+		t.Fatalf("expected ErrDuplicateSubmission, got %v", err)
+	}
+	if len(repo.leads) != 1 {
+		t.Error("duplicate lead must not be saved")
+	}
+}
+
+func TestLeadService_Create_SamePhoneOutsideWindow(t *testing.T) {
+	repo := newFakeLeadRepository(&models.Lead{ID: 1, Phone: "+79991234567", CreatedAt: time.Now().Add(-time.Hour)})
+	svc := services.NewLeadService(repo, 10*time.Minute, testLogger())
+
+	if _, err := svc.Create(validLeadRequest()); err != nil {
+		t.Fatalf("lead outside duplicate window must be accepted, got %v", err)
+	}
+}
+
+func TestLeadService_Create_DuplicateCheckDisabled(t *testing.T) {
+	repo := newFakeLeadRepository(&models.Lead{ID: 1, Phone: "+79991234567", CreatedAt: time.Now()})
+	svc := services.NewLeadService(repo, 0, testLogger())
+
+	if _, err := svc.Create(validLeadRequest()); err != nil {
+		t.Fatalf("zero window must disable duplicate check, got %v", err)
 	}
 }

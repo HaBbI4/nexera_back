@@ -63,6 +63,12 @@ func main() {
 	}
 	defer redisClient.Close()
 
+	// Определение реального IP клиента за nginx — для ограничения частоты запросов
+	clientIPResolver, err := middleware.NewClientIPResolver(cfg.Spam.TrustedProxies)
+	if err != nil {
+		log.WithError(err).Fatal("Invalid TRUSTED_PROXIES")
+	}
+
 	// Подключение хранилища медиа (local/s3 — выбирается через MEDIA_DRIVER)
 	mediaStorage, err := media.NewStorage(context.Background(), &cfg.Media)
 	if err != nil {
@@ -88,9 +94,11 @@ func main() {
 	faqRepo := repository.NewFAQRepository(db)
 	faqService := services.NewFAQService(faqRepo, log)
 	leadRepo := repository.NewLeadRepository(db)
-	leadService := services.NewLeadService(leadRepo, log)
+	leadService := services.NewLeadService(leadRepo, time.Duration(cfg.Spam.LeadDuplicateWindowMinutes)*time.Minute, log)
 	serviceRepo := repository.NewServiceRepository(db)
 	serviceService := services.NewServiceService(serviceRepo, log)
+	reviewRepo := repository.NewReviewRepository(db)
+	reviewService := services.NewReviewService(reviewRepo, time.Duration(cfg.Spam.ReviewDuplicateWindowMinutes)*time.Minute, log)
 	bannerRepo := repository.NewBannerRepository(db)
 	bannerService := services.NewBannerService(bannerRepo, log)
 	pageRepo := repository.NewPageRepository(db)
@@ -115,6 +123,8 @@ func main() {
 	adminLeadHandler := admin.NewLeadHandler(leadService, log)
 	serviceHandler := public.NewServiceHandler(serviceService, redisClient, log)
 	adminServiceHandler := admin.NewServiceHandler(serviceService, redisClient, log)
+	reviewHandler := public.NewReviewHandler(reviewService, log)
+	adminReviewHandler := admin.NewReviewHandler(reviewService, log)
 
 	// Настройки HTTP-роутера
 	mux := setupRoutes(
@@ -135,13 +145,18 @@ func main() {
 		adminLeadHandler,
 		serviceHandler,
 		adminServiceHandler,
+		reviewHandler,
+		adminReviewHandler,
+		redisClient,
+		clientIPResolver,
+		&cfg.Spam,
 		cfg.Auth.JWTSecret,
 		cfg.Media.Local.Path,
 		log)
 
 	server := http.Server{
 		Addr:         fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port),
-		Handler:      mux,
+		Handler:      middleware.Preflight(mux),
 		ReadTimeout:  time.Duration(cfg.Server.ReadTimeout) * time.Second,
 		WriteTimeout: time.Duration(cfg.Server.WriteTimeout) * time.Second,
 	}
@@ -200,6 +215,11 @@ func setupRoutes(
 	adminLeadHandler *admin.LeadHandler,
 	serviceHandler *public.ServiceHandler,
 	adminServiceHandler *admin.ServiceHandler,
+	reviewHandler *public.ReviewHandler,
+	adminReviewHandler *admin.ReviewHandler,
+	redisClient *redis.Client,
+	clientIPResolver *middleware.ClientIPResolver,
+	spamCfg *config.SpamConfig,
 	jwtSecret string,
 	localMediaPath string,
 	log *logger.Logger,
@@ -209,6 +229,18 @@ func setupRoutes(
 	logging := middleware.Logging(log)
 	requireAuth := middleware.RequireAuth(jwtSecret)
 	requireAdmin := middleware.RequireRole(models.RoleCodeAdmin)
+
+	// Ограничение частоты публичных форм с одного IP (счетчики в Redis)
+	leadRateLimit := middleware.RateLimit(redisClient, middleware.RateLimitRule{
+		Name:        "leads",
+		MaxRequests: spamCfg.LeadRateLimit.MaxRequests,
+		Window:      time.Duration(spamCfg.LeadRateLimit.WindowMinutes) * time.Minute,
+	}, clientIPResolver, log)
+	reviewRateLimit := middleware.RateLimit(redisClient, middleware.RateLimitRule{
+		Name:        "reviews",
+		MaxRequests: spamCfg.ReviewRateLimit.MaxRequests,
+		Window:      time.Duration(spamCfg.ReviewRateLimit.WindowMinutes) * time.Minute,
+	}, clientIPResolver, log)
 
 	// Health check endpoints
 	mux.HandleFunc("GET /health", middleware.Chain(healthHandler.Health, logging, middleware.CORS))
@@ -251,7 +283,7 @@ func setupRoutes(
 	mux.HandleFunc("DELETE /api/v1/admin/faq/{id}", middleware.Chain(adminFAQHandler.DeleteFAQ, logging, middleware.CORS, requireAuth))
 
 	// Lead's endpoints (публичные, без авторизации: клиент может только оставить заявку)
-	mux.HandleFunc("POST /api/v1/leads", middleware.Chain(leadHandler.CreateLead, logging, middleware.CORS))
+	mux.HandleFunc("POST /api/v1/leads", middleware.Chain(leadHandler.CreateLead, logging, middleware.CORS, leadRateLimit))
 
 	// Lead's admin endpoints (требуют авторизации: просмотр и удаление заявок)
 	mux.HandleFunc("GET /api/v1/admin/leads", middleware.Chain(adminLeadHandler.GetLeads, logging, middleware.CORS, requireAuth))
@@ -268,6 +300,18 @@ func setupRoutes(
 	mux.HandleFunc("POST /api/v1/admin/services", middleware.Chain(adminServiceHandler.CreateService, logging, middleware.CORS, requireAuth))
 	mux.HandleFunc("PATCH /api/v1/admin/services/{id}", middleware.Chain(adminServiceHandler.UpdateService, logging, middleware.CORS, requireAuth))
 	mux.HandleFunc("DELETE /api/v1/admin/services/{id}", middleware.Chain(adminServiceHandler.DeleteService, logging, middleware.CORS, requireAuth))
+
+	// Review's endpoints (публичные, без авторизации: только одобренные отзывы, без контактов клиента)
+	mux.HandleFunc("GET /api/v1/reviews", middleware.Chain(reviewHandler.GetReviews, logging, middleware.CORS))
+	mux.HandleFunc("GET /api/v1/reviews/summary", middleware.Chain(reviewHandler.GetReviewsSummary, logging, middleware.CORS))
+	mux.HandleFunc("POST /api/v1/reviews", middleware.Chain(reviewHandler.CreateReview, logging, middleware.CORS, reviewRateLimit))
+
+	// Review's admin endpoints (требуют авторизации: просмотр с контактами, модерация, удаление)
+	mux.HandleFunc("GET /api/v1/admin/reviews", middleware.Chain(adminReviewHandler.GetReviews, logging, middleware.CORS, requireAuth))
+	mux.HandleFunc("GET /api/v1/admin/reviews/{id}", middleware.Chain(adminReviewHandler.GetReview, logging, middleware.CORS, requireAuth))
+	mux.HandleFunc("POST /api/v1/admin/reviews/{id}/approve", middleware.Chain(adminReviewHandler.ApproveReview, logging, middleware.CORS, requireAuth))
+	mux.HandleFunc("POST /api/v1/admin/reviews/{id}/unapprove", middleware.Chain(adminReviewHandler.UnapproveReview, logging, middleware.CORS, requireAuth))
+	mux.HandleFunc("DELETE /api/v1/admin/reviews/{id}", middleware.Chain(adminReviewHandler.DeleteReview, logging, middleware.CORS, requireAuth))
 
 	// User's admin endpoints (только для роли admin)
 	mux.HandleFunc("GET /api/v1/admin/users", middleware.Chain(adminUserHandler.GetUsers, logging, middleware.CORS, requireAuth, requireAdmin))

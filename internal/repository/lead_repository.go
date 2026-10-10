@@ -59,6 +59,8 @@ type LeadRepository interface {
 	// lead.Service не заполняется.
 	Create(lead *models.Lead) error
 	Delete(id int) error
+	// ExistsByPhoneSince сообщает, была ли заявка с этим телефоном, созданная не раньше since.
+	ExistsByPhoneSince(phone string, since time.Time) (bool, error)
 }
 
 // leadRepository реализует LeadRepository поверх PostgreSQL.
@@ -246,4 +248,18 @@ func (r *leadRepository) Delete(id int) error {
 	}
 
 	return nil
+}
+
+// ExistsByPhoneSince сообщает, была ли заявка с этим телефоном, созданная не раньше since.
+func (r *leadRepository) ExistsByPhoneSince(phone string, since time.Time) (bool, error) {
+	var exists bool
+	err := r.db.QueryRow(
+		`SELECT EXISTS (SELECT 1 FROM leads WHERE phone = $1 AND created_at >= $2)`,
+		phone, since,
+	).Scan(&exists)
+	if err != nil {
+		return false, fmt.Errorf("error checking recent lead by phone: %w", err)
+	}
+
+	return exists, nil
 }

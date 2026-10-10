@@ -28,4 +28,7 @@ type CreateLeadRequest struct {
 	Email     *string `json:"email"`
 	Message   *string `json:"message"`
 	Source    string  `json:"source"`
+	// Website — honeypot: скрытое поле формы, человек его не видит и не заполняет.
+	// Заполнено — запрос отправил бот (см. services.ErrSpamDetected). Должно быть пустым.
+	Website string `json:"website"`
 }
