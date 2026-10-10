@@ -39,6 +39,9 @@ func (f *fakeBannerRepository) List(filter repository.BannerFilter) ([]*models.B
 		if filter.OnlyVisible && !isVisibleForTest(b, filter.ActiveAt) {
 			continue
 		}
+		if filter.IsActive != nil && b.IsActive != *filter.IsActive {
+			continue
+		}
 		result = append(result, b)
 	}
 	return result, nil
@@ -121,6 +124,59 @@ func TestBannerService_ListPublic_FiltersByPage(t *testing.T) {
 	}
 	if len(got) != 1 || got[0].ID != bannerPage1.ID {
 		t.Errorf("expected only banner from page 1, got %+v", got)
+	}
+}
+
+func TestBannerService_List_DoesNotApplyVisibilityRule(t *testing.T) {
+	now := time.Now()
+	active := &models.Banner{ID: 1, IsActive: true}
+	inactive := &models.Banner{ID: 2, IsActive: false}
+	expired := &models.Banner{ID: 3, IsActive: true, EndsAt: ptr(now.Add(-time.Hour))}
+	repo := newFakeBannerRepository(active, inactive, expired)
+	svc := services.NewBannerService(repo, testLogger())
+
+	got, err := svc.List(services.ListAdminBannersFilter{})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if repo.lastFilter.OnlyVisible {
+		t.Error("admin List must not request OnlyVisible banners")
+	}
+	if len(got) != 3 {
+		t.Errorf("expected all 3 banners, got %d", len(got))
+	}
+}
+
+func TestBannerService_List_FiltersByIsActive(t *testing.T) {
+	active := &models.Banner{ID: 1, IsActive: true}
+	inactive := &models.Banner{ID: 2, IsActive: false}
+	repo := newFakeBannerRepository(active, inactive)
+	svc := services.NewBannerService(repo, testLogger())
+
+	if _, err := svc.List(services.ListAdminBannersFilter{
+		PageID:   ptr(5),
+		IsActive: ptr(false),
+		Sort:     repository.BannerSortCreatedAt,
+		Order:    repository.SortDesc,
+		Limit:    10,
+		Offset:   20,
+	}); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	f := repo.lastFilter
+	if f.IsActive == nil || *f.IsActive != false || f.PageID == nil || *f.PageID != 5 ||
+		f.Sort != repository.BannerSortCreatedAt || f.Order != repository.SortDesc || f.Limit != 10 || f.Offset != 20 {
+		t.Errorf("filter not passed through correctly: %+v", f)
+	}
+
+	got, err := svc.List(services.ListAdminBannersFilter{IsActive: ptr(false)})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(got) != 1 || got[0].ID != inactive.ID {
+		t.Errorf("expected only inactive banner, got %+v", got)
 	}
 }
 

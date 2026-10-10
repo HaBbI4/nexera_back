@@ -53,6 +53,37 @@ func (svc *BannerService) ListPublic(filter ListBannersFilter) ([]*models.Banner
 	})
 }
 
+// ListAdminBannersFilter описывает запрос списка баннеров из админ-панели: в отличие от
+// ListBannersFilter, видимость не форсируется — админ видит и выключенные, и будущие,
+// и истекшие баннеры, а по флагу is_active может отфильтровать сам.
+type ListAdminBannersFilter struct {
+	PageID   *int
+	IsActive *bool
+	Sort     repository.BannerSortField
+	Order    repository.SortOrder
+	Limit    int
+	Offset   int
+}
+
+// List возвращает баннеры для админ-панели вне зависимости от видимости на сайте.
+func (svc *BannerService) List(filter ListAdminBannersFilter) ([]*models.Banner, error) {
+	return svc.repo.List(repository.BannerFilter{
+		PageID:   filter.PageID,
+		IsActive: filter.IsActive,
+		Sort:     filter.Sort,
+		Order:    filter.Order,
+		Limit:    filter.Limit,
+		Offset:   filter.Offset,
+	})
+}
+
+// GetByID возвращает баннер по ID вне зависимости от видимости — в отличие от
+// GetPublicByID, для админки: например, чтобы перед удалением баннера узнать его
+// PageID и инвалидировать кеш страницы, в которую он встроен (см. handlers/admin.BannerHandler).
+func (svc *BannerService) GetByID(id int) (*models.Banner, error) {
+	return svc.repo.GetByID(id)
+}
+
 // GetPublicByID возвращает баннер по ID, если он видим прямо сейчас (см. ListPublic).
 // Отключенный или находящийся вне окна показа баннер считается несуществующим —
 // публичный API не должен подтверждать, что скрытый контент вообще есть.

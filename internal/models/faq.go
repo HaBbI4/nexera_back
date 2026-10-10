@@ -21,3 +21,12 @@ type CreateFAQRequest struct {
 	Position    int    `json:"position"`
 	IsPublished bool   `json:"is_published"`
 }
+
+// UpdateFAQRequest представляет PATCH-запрос на обновление записи FAQ: nil-поле значит
+// "не менять", присутствующее — новое значение.
+type UpdateFAQRequest struct {
+	Question    *string `json:"question"`
+	Answer      *string `json:"answer"`
+	Position    *int    `json:"position"`
+	IsPublished *bool   `json:"is_published"`
+}

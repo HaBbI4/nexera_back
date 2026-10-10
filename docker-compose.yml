@@ -4,15 +4,15 @@ services:
     container_name: nexera_back-postgres
     restart: always
     environment:
-      POSTGRES_DB: nexera
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: nexerapass
+      POSTGRES_DB: ${DB_NAME:-nexera_back_db}
+      POSTGRES_USER: ${DB_USER:-nexera_back_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-nexera_back_pass}
     ports:
       - "5433:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U nexera_back_user -d nexera_back_db" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-nexera_back_user} -d ${DB_NAME:-nexera_back_db}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -27,7 +27,7 @@ services:
       - ./migrations:/migrations
     command: [
       "-path", "/migrations",
-      "-database", "postgres://nexera_back_user:nexera_back_pass@postgres:5432/nexera_back_db?sslmode=disable",
+      "-database", "postgres://${DB_USER:-nexera_back_user}:${DB_PASSWORD:-nexera_back_pass}@postgres:5432/${DB_NAME:-nexera_back_db}?sslmode=disable",
       "up"
     ]
     restart: "no"
@@ -107,9 +107,9 @@ services:
       - SERVER_WRITE_TIMEOUT=15
       - DB_HOST=postgres
       - DB_PORT=5432
-      - DB_USER=nexera_back_user
-      - DB_PASSWORD=nexera_back_pass
-      - DB_NAME=nexera_back_db
+      - DB_USER=${DB_USER:-nexera_back_user}
+      - DB_PASSWORD=${DB_PASSWORD:-nexera_back_pass}
+      - DB_NAME=${DB_NAME:-nexera_back_db}
       - DB_SSL_MODE=disable
       - REDIS_HOST=redis
       - REDIS_PORT=6379
@@ -121,6 +121,8 @@ services:
       - KAFKA_BROKERS=kafka:29092
       - KAFKA_GROUP_ID=detailing-crm
       - KAFKA_TOPIC_ORDERS=orders
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set in .env}
+      - JWT_TTL_MINUTES=${JWT_TTL_MINUTES:-1440}
     depends_on:
       postgres:
         condition: service_healthy
@@ -143,9 +145,9 @@ services:
     environment:
       - DB_HOST=postgres
       - DB_PORT=5432
-      - DB_USER=nexera_back_user
-      - DB_PASSWORD=nexera_back_pass
-      - DB_NAME=nexera_back_db
+      - DB_USER=${DB_USER:-nexera_back_user}
+      - DB_PASSWORD=${DB_PASSWORD:-nexera_back_pass}
+      - DB_NAME=${DB_NAME:-nexera_back_db}
       - DB_SSL_MODE=disable
       - LOG_LEVEL=info
       - LOG_FORMAT=json

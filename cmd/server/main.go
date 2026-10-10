@@ -13,6 +13,7 @@ import (
 	"nexera_back/internal/logger"
 	"nexera_back/internal/media"
 	"nexera_back/internal/middleware"
+	"nexera_back/internal/models"
 	"nexera_back/internal/redis"
 	"nexera_back/internal/repository"
 	"nexera_back/internal/services"
@@ -78,35 +79,62 @@ func main() {
 	// Инициализация сервисов
 	carService := services.NewCarService(db, log)
 	customerService := services.NewCustomerService(db, log)
-	serviceService := services.NewServiceService(db, log)
 	orderService := services.NewOrderService(db, log, kafkaProducer)
 	orderMediaService := services.NewOrderMediaService(db, mediaStorage, log)
 	userRepo := repository.NewUserRepository(db)
 	userService := services.NewUserService(userRepo, log)
+	roleRepo := repository.NewRoleRepository(db)
+	roleService := services.NewRoleService(roleRepo, log)
+	faqRepo := repository.NewFAQRepository(db)
+	faqService := services.NewFAQService(faqRepo, log)
+	leadRepo := repository.NewLeadRepository(db)
+	leadService := services.NewLeadService(leadRepo, log)
+	serviceRepo := repository.NewServiceRepository(db)
+	serviceService := services.NewServiceService(serviceRepo, log)
 	bannerRepo := repository.NewBannerRepository(db)
 	bannerService := services.NewBannerService(bannerRepo, log)
+	pageRepo := repository.NewPageRepository(db)
+	pageService := services.NewPageService(pageRepo, bannerService, log)
 
 	// Инициализация handlers
 	healthHandler := handlers.NewHealthHandler(db, redisClient)
 	carHandler := handlers.NewCarHandler(carService, redisClient, log)
 	customerHandler := handlers.NewCustomerHandler(customerService, redisClient, log)
-	serviceHandler := handlers.NewServiceHandler(serviceService, redisClient, log)
 	orderHandler := handlers.NewOrderHandler(orderService, orderMediaService, redisClient, log, cfg.Media.MaxFileSizeMB)
 	jwtTTL := time.Duration(cfg.Auth.JWTTTLMinutes) * time.Minute
 	authHandler := admin.NewAuthHandler(userService, cfg.Auth.JWTSecret, jwtTTL, log)
 	bannerHandler := public.NewBannerHandler(bannerService, redisClient, log)
-	adminBannerHandler := admin.NewBannerHandler(bannerService, redisClient, log)
+	adminBannerHandler := admin.NewBannerHandler(bannerService, redisClient, mediaStorage, cfg.Media.MaxFileSizeMB, log)
+	pageHandler := public.NewPageHandler(pageService, redisClient, log)
+	adminPageHandler := admin.NewPageHandler(pageService, redisClient, log)
+	adminUserHandler := admin.NewUserHandler(userService, log)
+	adminRoleHandler := admin.NewRoleHandler(roleService, log)
+	faqHandler := public.NewFAQHandler(faqService, redisClient, log)
+	adminFAQHandler := admin.NewFAQHandler(faqService, redisClient, log)
+	leadHandler := public.NewLeadHandler(leadService, log)
+	adminLeadHandler := admin.NewLeadHandler(leadService, log)
+	serviceHandler := public.NewServiceHandler(serviceService, redisClient, log)
+	adminServiceHandler := admin.NewServiceHandler(serviceService, redisClient, log)
 
 	// Настройки HTTP-роутера
 	mux := setupRoutes(
 		healthHandler,
 		carHandler,
 		customerHandler,
-		serviceHandler,
 		orderHandler,
 		authHandler,
 		bannerHandler,
 		adminBannerHandler,
+		pageHandler,
+		adminPageHandler,
+		adminUserHandler,
+		adminRoleHandler,
+		faqHandler,
+		adminFAQHandler,
+		leadHandler,
+		adminLeadHandler,
+		serviceHandler,
+		adminServiceHandler,
 		cfg.Auth.JWTSecret,
 		cfg.Media.Local.Path,
 		log)
@@ -151,18 +179,27 @@ func main() {
 //   - админские /api/v1/admin/*  — требуют валидный JWT (middleware.RequireAuth),
 //     часть — еще и конкретную роль (middleware.RequireRole)
 //
-// Хендлеры car/customer/service/order ниже относятся к старому (детейлинг) домену
+// Хендлеры car/customer/order ниже относятся к старому (детейлинг) домену
 // и доживают здесь временно — при переносе на баннеры/лиды/отзывы они переедут
 // в internal/handlers/public и internal/handlers/admin по тому же принципу, что auth.
 func setupRoutes(
 	healthHandler *handlers.HealthHandler,
 	carHandler *handlers.CarHandler,
 	customerHandler *handlers.CustomerHandler,
-	serviceHandler *handlers.ServiceHandler,
 	orderHandler *handlers.OrderHandler,
 	authHandler *admin.AuthHandler,
 	bannerHandler *public.BannerHandler,
 	adminBannerHandler *admin.BannerHandler,
+	pageHandler *public.PageHandler,
+	adminPageHandler *admin.PageHandler,
+	adminUserHandler *admin.UserHandler,
+	adminRoleHandler *admin.RoleHandler,
+	faqHandler *public.FAQHandler,
+	adminFAQHandler *admin.FAQHandler,
+	leadHandler *public.LeadHandler,
+	adminLeadHandler *admin.LeadHandler,
+	serviceHandler *public.ServiceHandler,
+	adminServiceHandler *admin.ServiceHandler,
 	jwtSecret string,
 	localMediaPath string,
 	log *logger.Logger,
@@ -171,6 +208,7 @@ func setupRoutes(
 
 	logging := middleware.Logging(log)
 	requireAuth := middleware.RequireAuth(jwtSecret)
+	requireAdmin := middleware.RequireRole(models.RoleCodeAdmin)
 
 	// Health check endpoints
 	mux.HandleFunc("GET /health", middleware.Chain(healthHandler.Health, logging, middleware.CORS))
@@ -185,10 +223,65 @@ func setupRoutes(
 	mux.HandleFunc("GET /api/v1/banners", middleware.Chain(bannerHandler.GetBanners, logging, middleware.CORS))
 	mux.HandleFunc("GET /api/v1/banners/{id}", middleware.Chain(bannerHandler.GetBanner, logging, middleware.CORS))
 
-	// Banner's admin endpoints (требуют авторизации)
+	// Banner's admin endpoints (требуют авторизации; чтение — без фильтра видимости)
+	mux.HandleFunc("GET /api/v1/admin/banners", middleware.Chain(adminBannerHandler.GetBanners, logging, middleware.CORS, requireAuth))
+	mux.HandleFunc("GET /api/v1/admin/banners/{id}", middleware.Chain(adminBannerHandler.GetBanner, logging, middleware.CORS, requireAuth))
 	mux.HandleFunc("POST /api/v1/admin/banners", middleware.Chain(adminBannerHandler.CreateBanner, logging, middleware.CORS, requireAuth))
 	mux.HandleFunc("PATCH /api/v1/admin/banners/{id}", middleware.Chain(adminBannerHandler.UpdateBanner, logging, middleware.CORS, requireAuth))
 	mux.HandleFunc("DELETE /api/v1/admin/banners/{id}", middleware.Chain(adminBannerHandler.DeleteBanner, logging, middleware.CORS, requireAuth))
+
+	// Page's endpoints (публичные, без авторизации)
+	mux.HandleFunc("GET /api/v1/pages", middleware.Chain(pageHandler.GetPages, logging, middleware.CORS))
+	mux.HandleFunc("GET /api/v1/pages/{id}", middleware.Chain(pageHandler.GetPage, logging, middleware.CORS))
+
+	// Page's admin endpoints (требуют авторизации)
+	mux.HandleFunc("POST /api/v1/admin/pages", middleware.Chain(adminPageHandler.CreatePage, logging, middleware.CORS, requireAuth))
+	mux.HandleFunc("PATCH /api/v1/admin/pages/{id}", middleware.Chain(adminPageHandler.UpdatePage, logging, middleware.CORS, requireAuth))
+	mux.HandleFunc("DELETE /api/v1/admin/pages/{id}", middleware.Chain(adminPageHandler.DeletePage, logging, middleware.CORS, requireAuth))
+
+	// FAQ endpoints (публичные, без авторизации)
+	mux.HandleFunc("GET /api/v1/faq", middleware.Chain(faqHandler.GetFAQs, logging, middleware.CORS))
+	mux.HandleFunc("GET /api/v1/faq/{id}", middleware.Chain(faqHandler.GetFAQ, logging, middleware.CORS))
+
+	// FAQ admin endpoints (требуют авторизации; чтение — включая неопубликованные)
+	mux.HandleFunc("GET /api/v1/admin/faq", middleware.Chain(adminFAQHandler.GetFAQs, logging, middleware.CORS, requireAuth))
+	mux.HandleFunc("GET /api/v1/admin/faq/{id}", middleware.Chain(adminFAQHandler.GetFAQ, logging, middleware.CORS, requireAuth))
+	mux.HandleFunc("POST /api/v1/admin/faq", middleware.Chain(adminFAQHandler.CreateFAQ, logging, middleware.CORS, requireAuth))
+	mux.HandleFunc("PATCH /api/v1/admin/faq/{id}", middleware.Chain(adminFAQHandler.UpdateFAQ, logging, middleware.CORS, requireAuth))
+	mux.HandleFunc("DELETE /api/v1/admin/faq/{id}", middleware.Chain(adminFAQHandler.DeleteFAQ, logging, middleware.CORS, requireAuth))
+
+	// Lead's endpoints (публичные, без авторизации: клиент может только оставить заявку)
+	mux.HandleFunc("POST /api/v1/leads", middleware.Chain(leadHandler.CreateLead, logging, middleware.CORS))
+
+	// Lead's admin endpoints (требуют авторизации: просмотр и удаление заявок)
+	mux.HandleFunc("GET /api/v1/admin/leads", middleware.Chain(adminLeadHandler.GetLeads, logging, middleware.CORS, requireAuth))
+	mux.HandleFunc("GET /api/v1/admin/leads/{id}", middleware.Chain(adminLeadHandler.GetLead, logging, middleware.CORS, requireAuth))
+	mux.HandleFunc("DELETE /api/v1/admin/leads/{id}", middleware.Chain(adminLeadHandler.DeleteLead, logging, middleware.CORS, requireAuth))
+
+	// Service's endpoints (публичные, без авторизации)
+	mux.HandleFunc("GET /api/v1/services", middleware.Chain(serviceHandler.GetServices, logging, middleware.CORS))
+	mux.HandleFunc("GET /api/v1/services/{id}", middleware.Chain(serviceHandler.GetService, logging, middleware.CORS))
+
+	// Service's admin endpoints (требуют авторизации; чтение — включая неопубликованные)
+	mux.HandleFunc("GET /api/v1/admin/services", middleware.Chain(adminServiceHandler.GetServices, logging, middleware.CORS, requireAuth))
+	mux.HandleFunc("GET /api/v1/admin/services/{id}", middleware.Chain(adminServiceHandler.GetService, logging, middleware.CORS, requireAuth))
+	mux.HandleFunc("POST /api/v1/admin/services", middleware.Chain(adminServiceHandler.CreateService, logging, middleware.CORS, requireAuth))
+	mux.HandleFunc("PATCH /api/v1/admin/services/{id}", middleware.Chain(adminServiceHandler.UpdateService, logging, middleware.CORS, requireAuth))
+	mux.HandleFunc("DELETE /api/v1/admin/services/{id}", middleware.Chain(adminServiceHandler.DeleteService, logging, middleware.CORS, requireAuth))
+
+	// User's admin endpoints (только для роли admin)
+	mux.HandleFunc("GET /api/v1/admin/users", middleware.Chain(adminUserHandler.GetUsers, logging, middleware.CORS, requireAuth, requireAdmin))
+	mux.HandleFunc("GET /api/v1/admin/users/{id}", middleware.Chain(adminUserHandler.GetUser, logging, middleware.CORS, requireAuth, requireAdmin))
+	mux.HandleFunc("POST /api/v1/admin/users", middleware.Chain(adminUserHandler.CreateUser, logging, middleware.CORS, requireAuth, requireAdmin))
+	mux.HandleFunc("PATCH /api/v1/admin/users/{id}", middleware.Chain(adminUserHandler.UpdateUser, logging, middleware.CORS, requireAuth, requireAdmin))
+	mux.HandleFunc("DELETE /api/v1/admin/users/{id}", middleware.Chain(adminUserHandler.DeleteUser, logging, middleware.CORS, requireAuth, requireAdmin))
+
+	// Role's admin endpoints (только для роли admin)
+	mux.HandleFunc("GET /api/v1/admin/roles", middleware.Chain(adminRoleHandler.GetRoles, logging, middleware.CORS, requireAuth, requireAdmin))
+	mux.HandleFunc("GET /api/v1/admin/roles/{id}", middleware.Chain(adminRoleHandler.GetRole, logging, middleware.CORS, requireAuth, requireAdmin))
+	mux.HandleFunc("POST /api/v1/admin/roles", middleware.Chain(adminRoleHandler.CreateRole, logging, middleware.CORS, requireAuth, requireAdmin))
+	mux.HandleFunc("PATCH /api/v1/admin/roles/{id}", middleware.Chain(adminRoleHandler.UpdateRole, logging, middleware.CORS, requireAuth, requireAdmin))
+	mux.HandleFunc("DELETE /api/v1/admin/roles/{id}", middleware.Chain(adminRoleHandler.DeleteRole, logging, middleware.CORS, requireAuth, requireAdmin))
 
 	// Car's endpoints
 	mux.HandleFunc("GET /api/v1/cars", middleware.Chain(carHandler.GetCars, logging, middleware.CORS))
@@ -198,9 +291,6 @@ func setupRoutes(
 	mux.HandleFunc("GET /api/v1/customers", middleware.Chain(customerHandler.GetCustomers, logging, middleware.CORS))
 	mux.HandleFunc("GET /api/v1/customers/{id}", middleware.Chain(customerHandler.GetCustomer, logging, middleware.CORS))
 	mux.HandleFunc("POST /api/v1/customers", middleware.Chain(customerHandler.CreateCustomer, logging, middleware.CORS))
-
-	// Service's endpoints
-	mux.HandleFunc("POST /api/v1/services", middleware.Chain(serviceHandler.CreateService, logging, middleware.CORS))
 
 	// Order's endpoints
 	mux.HandleFunc("GET /api/v1/orders", middleware.Chain(orderHandler.GetOrders, logging, middleware.CORS))

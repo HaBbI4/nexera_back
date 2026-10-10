@@ -26,3 +26,14 @@ type CreateUserRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
+
+// UpdateUserRequest представляет PATCH-запрос на обновление пользователя админ-панели:
+// nil-поле значит "не менять", присутствующее — новое значение. Password, если прислан,
+// хешируется сервисом заново (см. UserService.Update).
+type UpdateUserRequest struct {
+	RoleID   *int    `json:"role_id"`
+	Name     *string `json:"name"`
+	Email    *string `json:"email"`
+	Password *string `json:"password"`
+	IsActive *bool   `json:"is_active"`
+}

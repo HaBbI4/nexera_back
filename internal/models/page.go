@@ -10,4 +10,22 @@ type Page struct {
 
 	Slug string `json:"slug" db:"slug"`
 	Name string `json:"name" db:"name"`
+
+	// Banners заполняется только при получении одной страницы по ID (см.
+	// PageService.GetPublicByIDWithBanners) — список баннеров, видимых прямо сейчас,
+	// отсортированных по Position. При List() всегда nil, в БД не хранится.
+	Banners []*Banner `json:"banners,omitempty" db:"-"`
+}
+
+// CreatePageRequest представляет запрос на создание страницы
+type CreatePageRequest struct {
+	Slug string `json:"slug"`
+	Name string `json:"name"`
+}
+
+// UpdatePageRequest представляет PATCH-запрос на обновление страницы: nil-поле значит
+// "не менять", присутствующее — новое значение.
+type UpdatePageRequest struct {
+	Slug *string `json:"slug"`
+	Name *string `json:"name"`
 }

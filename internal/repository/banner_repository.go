@@ -45,6 +45,10 @@ type BannerFilter struct {
 	// ограничение, принимает сервис (бизнес-правило), а не вызывающий код.
 	OnlyVisible bool
 	ActiveAt    time.Time
+	// IsActive — вернуть только включенные (true) или только выключенные (false) баннеры;
+	// nil — все. Только флаг is_active, без окна показа — для админки, где нужно видеть
+	// и будущие, и истекшие баннеры.
+	IsActive *bool
 
 	Sort  BannerSortField
 	Order SortOrder
@@ -96,6 +100,12 @@ func (r *bannerRepository) List(filter BannerFilter) ([]*models.Banner, error) {
 	if filter.OnlyVisible {
 		query += fmt.Sprintf(" AND is_active = true AND (starts_at IS NULL OR starts_at <= $%d) AND (ends_at IS NULL OR ends_at >= $%d)", argIndex, argIndex)
 		args = append(args, filter.ActiveAt)
+		argIndex++
+	}
+
+	if filter.IsActive != nil {
+		query += fmt.Sprintf(" AND is_active = $%d", argIndex)
+		args = append(args, *filter.IsActive)
 		argIndex++
 	}
 

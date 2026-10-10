@@ -162,4 +162,6 @@ const (
 	KeyPrefixService  = "service"
 	KeyPrefixCustomer = "customer"
 	KeyPrefixBanner   = "banner"
+	KeyPrefixPage     = "page"
+	KeyPrefixFAQ      = "faq"
 )

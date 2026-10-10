@@ -72,7 +72,7 @@ Kafka (`internal/kafka`) и Redis (`internal/redis`) подключаются к
 8. **Event System**: Kafka + transactional outbox — асинхронные уведомления для telegram-bot
 9. **Monitoring**: health checks и структурированные логи (`internal/logger`, JSON/text через logrus)
 
-> Старый детейлинг-домен (`cars`, `customers`, `orders`, `service_service.go` и их хендлеры в `internal/handlers`) ещё не вынесен — он донашивается временно и будет заменён хендлерами/сервисами/репозиториями под баннеры/лиды/отзывы по той же схеме, что уже сделана для `users` (см. `internal/repository/user_repository.go`, `internal/services/user_service.go`, `internal/handlers/admin/auth_handler.go`).
+> Старый детейлинг-домен (`cars`, `customers`, `orders` и их хендлеры в `internal/handlers`) ещё не вынесен — он донашивается временно и будет заменён хендлерами/сервисами/репозиториями под баннеры/лиды/отзывы по той же схеме, что уже сделана для `users` (см. `internal/repository/user_repository.go`, `internal/services/user_service.go`, `internal/handlers/admin/auth_handler.go`).
 
 ## 🚀 Быстрый старт
 
@@ -105,6 +105,10 @@ make health
 make up
 make logs
 ```
+
+`docker-compose.yml` не хранит секреты захардкоженными — `DB_USER`/`DB_PASSWORD`/`DB_NAME` и `JWT_SECRET` подставляются во все сервисы (`postgres`, `migrate`, `app`, `telegram-bot`) из `.env` через интерполяцию (`${DB_USER:-nexera_back_user}` и т.п.), а не прописаны в compose-файле напрямую. `JWT_SECRET` обязателен без дефолта: если он не задан в `.env`, `docker compose up` откажет ещё на этапе интерполяции с понятным сообщением — раньше без него `app` уходил в бесконечный рестарт-луп (`restart: always` + `log.Fatal` при пустом `JWT_SECRET`).
+
+**Важно:** в Docker-образе лежит только скомпилированный бинарник (multi-stage build, финальный слой — `alpine` без исходников и без hot-reload тулов). Правки в коде **не применяются** к уже запущенному контейнеру — ни простой `docker compose restart app`, ничего: нужно пересобрать образ (`docker compose up -d --build app`). Для активной разработки используйте `make dev-up` (только postgres+redis в Docker) + `make run` (сервер из исходников на хосте, `go run` подхватывает правки при каждом перезапуске) — `make up` поднимает весь стек целиком, это ближе к прод-подобному прогону, а не к циклу разработки.
 
 ## 📊 Мониторинг
 
@@ -159,6 +163,7 @@ nexera_back/
 3. **Логирование**: структурированные логи с контекстом (`log.WithFields(...)`), не `fmt.Printf`
 4. **Тесты**: сервисы тестируются через фейковые реализации `repository.*Repository` — см. `internal/services/user_service_test.go` как образец. Покрытие бизнес-логики — приоритет, 80% не является твёрдым требованием на данном этапе, но стремимся к нему по мере переноса доменов
 5. **Слои**: handlers не обращаются к БД напрямую; вся работа с SQL — только через `internal/repository`
+6. **Ошибки "не найдено"/"невалидные данные"**: сигнальные ошибки (`var ErrXNotFound = errors.New(...)` в `repository`, `var ErrInvalidX = errors.New(...)` в `services`, конкретные причины через `fmt.Errorf("%w: ...", ErrInvalidX)`), в хендлере — `errors.Is(err, ...)` для выбора HTTP-статуса. Не разбор текста ошибки через `strings.Contains` — см. `internal/repository/banner_repository.go` / `internal/services/banner_service.go` / `internal/handlers/admin/banner_handler.go`
 
 ### Добавление новой сущности (новый домен)
 
@@ -168,6 +173,25 @@ nexera_back/
 4. Unit-тесты сервиса на фейковом репозитории (`internal/services/x_service_test.go`)
 5. HTTP-обработчик в `internal/handlers/admin/` (если требует JWT) или `internal/handlers/public/`
 6. Маршрут в `cmd/server/main.go`, с нужным набором middleware (`middleware.Chain(handler, middleware.Logging(log), middleware.CORS, ...)`)
+
+За конкретными решениями (фильтрация/сортировка списка, частичное обновление, обработка ошибок) — см. следующий раздел: баннеры задуманы как эталон для всего проекта, а не разовое решение только для одной сущности.
+
+### Эталонный паттерн CRUD-эндпоинтов (баннеры)
+
+`internal/repository/banner_repository.go` + `internal/services/banner_service.go` + `internal/handlers/public/banner_handler.go` + `internal/handlers/admin/banner_handler.go` — образец, на который стоит ориентироваться для всех новых сущностей (услуги, FAQ, контакты, лиды, отзывы), а не только копировать старый детейлинг-код.
+
+**Чтение — `GET /api/v1/banners` (список) и `GET /api/v1/banners/{id}`:**
+- Фильтрация/сортировка по белому списку: `BannerSortField`/`bannerSortColumns` в репозитории — колонка в `ORDER BY` никогда не строится из сырого ввода клиента (SQL-инъекция через идентификатор колонки иначе неизбежна, т.к. `$N`-плейсхолдеры работают только для значений, не для имён колонок/направления)
+- Бизнес-правило видимости (`is_active` + окно `starts_at`/`ends_at`) живёт в сервисе (`ListPublic`/`GetPublicByID` всегда форсируют `OnlyVisible: true`), а не в хендлере — его нельзя обойти, выбрав другой путь вызова сервиса
+- Админке скрытое тоже нужно видеть, поэтому у сущностей с флагом видимости (`is_active`/`is_published`) есть отдельные `GET /api/v1/admin/x` и `/api/v1/admin/x/{id}` под `RequireAuth`: сервис вызывает `List`/`GetByID` без форсирования видимости, а флаг можно отфильтровать параметром (`is_active`/`is_published`). Один публичный GET с необязательной авторизацией не делаем: ответ одного URL зависел бы от того, кто спрашивает, а скрытый объект мог бы попасть в публичный Redis-кеш. Админские GET не кешируются
+- Валидация query-параметров в хендлере **не единообразна по степени строгости специально**: `limit`/`offset` при некорректном значении тихо откатываются к дефолту (как было в старом детейлинг-коде), а `page_id`/`sort`/`order` — новый для проекта вид параметров, там некорректное значение это `400`, а не тихий дефолт, чтобы клиент не думал, что получил отсортированный список, а на деле получил дефолтную сортировку
+
+**Запись — `POST /api/v1/admin/banners`, `PATCH /api/v1/admin/banners/{id}`, `DELETE /api/v1/admin/banners/{id}`:**
+- `PATCH` не собирает частичный `UPDATE` в репозитории — сервис подгружает текущую сущность (`repo.GetByID`), накладывает поверх только присланные в запросе поля (`nil` в `models.UpdateBannerRequest` = не менять), валидирует получившееся целиком и только потом сохраняет полную перезапись через `repo.Update(banner)`. Благодаря этому кросс-полевые правила (например, `ends_at` должен быть позже `starts_at`) проверяются корректно, даже если в конкретном PATCH-запросе менялось только одно из двух полей
+- `validateBanner` — одна функция на `Create` и `Update`: бизнес-правило обязано выполняться независимо от того, как сущность получила текущий вид (целиком при создании или слиянием при обновлении)
+- Нарушение внешнего ключа (`page_id` не существует) репозиторий ловит через `pq.Error.Code == "23503"` и транслирует в сигнальную `ErrPageNotFound` — иначе клиент увидел бы сырую ошибку Postgres вместо `400 page not found`
+- `UpdateBannerRequest` с `nil`-полями не умеет явно сбросить необязательное поле обратно в `NULL` (только задать новое значение) — осознанное упрощение для сайта-визитки, не стоит решать double-pointer'ами, пока не появится реальная потребность
+- Запись инвалидирует Redis-кеш конкретного ID после Update/Delete (`redisClient.Delete(...)`), а не ждёт TTL
 
 ### Аутентификация админ-панели
 
