@@ -103,6 +103,8 @@ func main() {
 	bannerService := services.NewBannerService(bannerRepo, log)
 	pageRepo := repository.NewPageRepository(db)
 	pageService := services.NewPageService(pageRepo, bannerService, log)
+	telegramUserRepo := repository.NewTelegramUserRepository(db)
+	telegramUserService := services.NewTelegramUserService(telegramUserRepo, log)
 
 	// Инициализация handlers
 	healthHandler := handlers.NewHealthHandler(db, redisClient)
@@ -125,6 +127,7 @@ func main() {
 	adminServiceHandler := admin.NewServiceHandler(serviceService, redisClient, log)
 	reviewHandler := public.NewReviewHandler(reviewService, log)
 	adminReviewHandler := admin.NewReviewHandler(reviewService, log)
+	adminTelegramUserHandler := admin.NewTelegramUserHandler(telegramUserService, log)
 
 	// Настройки HTTP-роутера
 	mux := setupRoutes(
@@ -147,6 +150,7 @@ func main() {
 		adminServiceHandler,
 		reviewHandler,
 		adminReviewHandler,
+		adminTelegramUserHandler,
 		redisClient,
 		clientIPResolver,
 		&cfg.Spam,
@@ -217,6 +221,7 @@ func setupRoutes(
 	adminServiceHandler *admin.ServiceHandler,
 	reviewHandler *public.ReviewHandler,
 	adminReviewHandler *admin.ReviewHandler,
+	adminTelegramUserHandler *admin.TelegramUserHandler,
 	redisClient *redis.Client,
 	clientIPResolver *middleware.ClientIPResolver,
 	spamCfg *config.SpamConfig,
@@ -326,6 +331,14 @@ func setupRoutes(
 	mux.HandleFunc("POST /api/v1/admin/roles", middleware.Chain(adminRoleHandler.CreateRole, logging, middleware.CORS, requireAuth, requireAdmin))
 	mux.HandleFunc("PATCH /api/v1/admin/roles/{id}", middleware.Chain(adminRoleHandler.UpdateRole, logging, middleware.CORS, requireAuth, requireAdmin))
 	mux.HandleFunc("DELETE /api/v1/admin/roles/{id}", middleware.Chain(adminRoleHandler.DeleteRole, logging, middleware.CORS, requireAuth, requireAdmin))
+
+	// Telegram user's admin endpoints (только для роли admin: пользователи бота получают
+	// уведомления с контактами клиентов из заявок и отзывов)
+	mux.HandleFunc("GET /api/v1/admin/telegram-users", middleware.Chain(adminTelegramUserHandler.GetTelegramUsers, logging, middleware.CORS, requireAuth, requireAdmin))
+	mux.HandleFunc("GET /api/v1/admin/telegram-users/{id}", middleware.Chain(adminTelegramUserHandler.GetTelegramUser, logging, middleware.CORS, requireAuth, requireAdmin))
+	mux.HandleFunc("POST /api/v1/admin/telegram-users", middleware.Chain(adminTelegramUserHandler.CreateTelegramUser, logging, middleware.CORS, requireAuth, requireAdmin))
+	mux.HandleFunc("PATCH /api/v1/admin/telegram-users/{id}", middleware.Chain(adminTelegramUserHandler.UpdateTelegramUser, logging, middleware.CORS, requireAuth, requireAdmin))
+	mux.HandleFunc("DELETE /api/v1/admin/telegram-users/{id}", middleware.Chain(adminTelegramUserHandler.DeleteTelegramUser, logging, middleware.CORS, requireAuth, requireAdmin))
 
 	// Car's endpoints
 	mux.HandleFunc("GET /api/v1/cars", middleware.Chain(carHandler.GetCars, logging, middleware.CORS))

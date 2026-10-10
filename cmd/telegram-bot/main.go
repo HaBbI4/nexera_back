@@ -13,6 +13,7 @@ import (
 	"nexera_back/internal/kafka"
 	"nexera_back/internal/logger"
 	"nexera_back/internal/models"
+	"nexera_back/internal/repository"
 	"nexera_back/internal/services"
 	"nexera_back/internal/telegram"
 )
@@ -32,7 +33,7 @@ func main() {
 	// orderService создается без Kafka producer — этот сервис только читает заказы,
 	// публикация событий (создание заказа) — зона ответственности cmd/server.
 	orderService := services.NewOrderService(db, log, nil)
-	telegramUserService := services.NewTelegramUserService(db, log)
+	telegramUserService := services.NewTelegramUserService(repository.NewTelegramUserRepository(db), log)
 
 	bot, err := telegram.New(&cfg.Telegram, orderService, telegramUserService, log)
 	if err != nil {
