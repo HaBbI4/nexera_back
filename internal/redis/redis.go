@@ -174,11 +174,8 @@ func GenerateKey(prefix, id string) string {
 
 // Константы для префиксов ключей
 const (
-	KeyPrefixOrder    = "order"
-	KeyPrefixCar      = "car"
-	KeyPrefixService  = "service"
-	KeyPrefixCustomer = "customer"
-	KeyPrefixBanner   = "banner"
-	KeyPrefixPage     = "page"
-	KeyPrefixFAQ      = "faq"
+	KeyPrefixService = "service"
+	KeyPrefixBanner  = "banner"
+	KeyPrefixPage    = "page"
+	KeyPrefixFAQ     = "faq"
 )

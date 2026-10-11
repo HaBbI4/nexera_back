@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"nexera_back/internal/database"
+	"nexera_back/internal/httpresponse"
 	"nexera_back/internal/redis"
 )
 
@@ -43,7 +44,7 @@ var startTime = time.Now()
 // @Router       /health [get]
 func (h *HealthHandler) Health(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		writeErrorResponse(w, http.StatusMethodNotAllowed, "Method not allowed")
+		httpresponse.WriteError(w, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
@@ -84,7 +85,7 @@ func (h *HealthHandler) Health(w http.ResponseWriter, r *http.Request) {
 		statusCode = http.StatusServiceUnavailable
 	}
 
-	writeJSONResponse(w, statusCode, response)
+	httpresponse.WriteJSON(w, statusCode, response)
 }
 
 // Readiness проверяет готовность приложения к обработке запросов
@@ -93,11 +94,11 @@ func (h *HealthHandler) Health(w http.ResponseWriter, r *http.Request) {
 // @Tags         health
 // @Produce      json
 // @Success      200  {object}  map[string]string
-// @Failure      503  {object}  ErrorResponse
+// @Failure      503  {object}  httpresponse.ErrorResponse
 // @Router       /health/readiness [get]
 func (h *HealthHandler) Readiness(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		writeErrorResponse(w, http.StatusMethodNotAllowed, "Method not allowed")
+		httpresponse.WriteError(w, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
@@ -106,16 +107,16 @@ func (h *HealthHandler) Readiness(w http.ResponseWriter, r *http.Request) {
 
 	// Быстрая проверка основных компонентов
 	if err := h.db.Health(); err != nil {
-		writeErrorResponse(w, http.StatusServiceUnavailable, "Database not ready")
+		httpresponse.WriteError(w, http.StatusServiceUnavailable, "Database not ready")
 		return
 	}
 
 	if err := h.redisClient.Health(ctx); err != nil {
-		writeErrorResponse(w, http.StatusServiceUnavailable, "Redis not ready")
+		httpresponse.WriteError(w, http.StatusServiceUnavailable, "Redis not ready")
 		return
 	}
 
-	writeJSONResponse(w, http.StatusOK, map[string]string{"status": "ready"})
+	httpresponse.WriteJSON(w, http.StatusOK, map[string]string{"status": "ready"})
 }
 
 // Liveness проверяет, что приложение живо
@@ -127,11 +128,11 @@ func (h *HealthHandler) Readiness(w http.ResponseWriter, r *http.Request) {
 // @Router       /health/liveness [get]
 func (h *HealthHandler) Liveness(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		writeErrorResponse(w, http.StatusMethodNotAllowed, "Method not allowed")
+		httpresponse.WriteError(w, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
-	writeJSONResponse(w, http.StatusOK, map[string]string{
+	httpresponse.WriteJSON(w, http.StatusOK, map[string]string{
 		"status": "alive",
 		"uptime": time.Since(startTime).String(),
 	})

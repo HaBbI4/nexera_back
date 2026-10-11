@@ -18,6 +18,8 @@ COPY . .
 
 # Сборка приложения
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o nexera_back-server ./cmd/server
+# Служебные команды (create-admin и т.п.): docker compose run --rm app ./nexera_back-cli ...
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o nexera_back-cli ./cmd/cli
 
 # Production stage
 FROM alpine:latest
@@ -36,9 +38,10 @@ RUN mkdir -p /app/logs /app/uploads && chown -R appuser:appuser /app/logs /app/u
 
 # Копирование бинарного файла из builder stage
 COPY --from=builder /build/nexera_back-server .
+COPY --from=builder /build/nexera_back-cli .
 
 # Изменение владельца файлов
-RUN chown appuser:appuser nexera_back-server
+RUN chown appuser:appuser nexera_back-server nexera_back-cli
 
 # Переключение на пользователя appuser
 USER appuser

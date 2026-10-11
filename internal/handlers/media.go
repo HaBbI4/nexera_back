@@ -5,6 +5,8 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+
+	"nexera_back/internal/httpresponse"
 )
 
 // NewLocalMediaHandler отдаёт файлы, сохранённые LocalStorage, по пути GET /media/{path...}.
@@ -13,7 +15,7 @@ import (
 func NewLocalMediaHandler(root string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet && r.Method != http.MethodHead {
-			writeErrorResponse(w, http.StatusMethodNotAllowed, "Method Not Allowed")
+			httpresponse.WriteError(w, http.StatusMethodNotAllowed, "Method Not Allowed")
 			return
 		}
 
@@ -23,7 +25,7 @@ func NewLocalMediaHandler(root string) http.HandlerFunc {
 
 		info, err := os.Stat(fullPath)
 		if err != nil || info.IsDir() {
-			writeErrorResponse(w, http.StatusNotFound, "file not found")
+			httpresponse.WriteError(w, http.StatusNotFound, "file not found")
 			return
 		}
 

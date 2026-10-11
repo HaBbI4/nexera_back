@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
-	"fmt"
 	"io"
 )
 
@@ -20,15 +19,6 @@ type Storage interface {
 	// URL возвращает постоянную публичную ссылку на файл. Ссылка остаётся
 	// действительной, пока файл не будет удалён — без срока истечения.
 	URL(key string) string
-}
-
-// GenerateKey генерирует уникальный ключ файла в рамках заказа и стадии съёмки
-func GenerateKey(orderID int, stage string, format Format) (string, error) {
-	suffix, err := randomHex(16)
-	if err != nil {
-		return "", fmt.Errorf("failed to generate media key: %w", err)
-	}
-	return fmt.Sprintf("orders/%d/%s/%s%s", orderID, stage, suffix, format.Extension), nil
 }
 
 func randomHex(n int) (string, error) {

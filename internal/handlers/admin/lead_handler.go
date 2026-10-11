@@ -8,6 +8,7 @@ import (
 
 	"nexera_back/internal/httpresponse"
 	"nexera_back/internal/logger"
+	"nexera_back/internal/models"
 	"nexera_back/internal/repository"
 	"nexera_back/internal/services"
 )
@@ -177,7 +178,8 @@ func (h *LeadHandler) GetLead(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	lead, err := h.leadService.GetByID(leadID)
+	var lead *models.Lead
+	lead, err = h.leadService.GetByID(leadID)
 	if err != nil {
 		h.writeLeadError(w, err)
 		return

@@ -8,10 +8,6 @@ import (
 	"io"
 )
 
-// ErrNotAnImage возвращается, когда присланный файл распознан по содержимому (magic bytes),
-// но это видео, а не изображение — для полей вроде image_url допустимо только фото.
-var ErrNotAnImage = errors.New("uploaded file is not an image")
-
 // UploadImage сохраняет один файл как изображение в поддиректорию category (например,
 // "banners", "services") и возвращает его публичный URL.
 //
@@ -27,9 +23,6 @@ func UploadImage(ctx context.Context, storage Storage, category string, size int
 	format, err := Sniff(header)
 	if err != nil {
 		return "", err
-	}
-	if format.Kind != KindPhoto {
-		return "", ErrNotAnImage
 	}
 
 	key, err := generateCategoryKey(category, format)
@@ -47,8 +40,7 @@ func UploadImage(ctx context.Context, storage Storage, category string, size int
 	return storage.URL(key), nil
 }
 
-// generateCategoryKey — более общий аналог GenerateKey (которая жестко заточена под заказы:
-// "orders/{id}/{stage}/..."). Эта версия ничего не знает про домен — только про category.
+// generateCategoryKey генерирует уникальный ключ файла вида "{category}/{random}{ext}".
 func generateCategoryKey(category string, format Format) (string, error) {
 	suffix, err := randomHex(16)
 	if err != nil {

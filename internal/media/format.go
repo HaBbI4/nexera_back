@@ -6,32 +6,21 @@ import (
 	"net/http"
 )
 
-// Kind описывает тип медиа-файла
-type Kind string
-
-const (
-	KindPhoto Kind = "photo"
-	KindVideo Kind = "video"
-)
-
 // Format описывает поддерживаемый формат медиа-файла
 type Format struct {
 	MIME      string
 	Extension string
-	Kind      Kind
 }
 
 // SniffHeaderSize сколько байт начала файла достаточно прочитать для определения формата
 const SniffHeaderSize = 512
 
-// supportedFormats единый реестр поддерживаемых форматов фото/видео.
+// supportedFormats единый реестр поддерживаемых форматов изображений.
 // Чтобы добавить новый формат, достаточно дописать запись сюда.
 var supportedFormats = []Format{
-	{MIME: "image/jpeg", Extension: ".jpg", Kind: KindPhoto},
-	{MIME: "image/png", Extension: ".png", Kind: KindPhoto},
-	{MIME: "image/heic", Extension: ".heic", Kind: KindPhoto},
-	{MIME: "video/mp4", Extension: ".mp4", Kind: KindVideo},
-	{MIME: "video/quicktime", Extension: ".mov", Kind: KindVideo},
+	{MIME: "image/jpeg", Extension: ".jpg"},
+	{MIME: "image/png", Extension: ".png"},
+	{MIME: "image/heic", Extension: ".heic"},
 }
 
 // ErrUnsupportedFormat возвращается, когда формат файла не входит в реестр поддерживаемых
@@ -68,7 +57,7 @@ func Sniff(header []byte) (Format, error) {
 	}
 
 	mime := http.DetectContentType(header)
-	// http.DetectContentType может вернуть уточнённый тип вида "video/mp4; ...",
+	// http.DetectContentType может вернуть тип с параметрами вида "text/plain; charset=utf-8",
 	// но для наших форматов достаточно точного совпадения без параметров.
 	if format, ok := lookupByMIME(trimMIMEParams(mime)); ok {
 		return format, nil

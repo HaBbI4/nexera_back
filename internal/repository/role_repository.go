@@ -9,7 +9,7 @@ import (
 	"nexera_back/internal/models"
 )
 
-// ErrRoleNotFound возвращается, когда роли с указанным ID не существует — в том числе,
+// ErrRoleNotFound возвращается, когда роли с указанным ID (code) не существует — в том числе,
 // когда role_id пользователя ссылается на несуществующую роль (нарушение внешнего ключа
 // users.role_id -> roles.id).
 // ErrRoleCodeTaken возвращается, когда code роли уже занят другой ролью (roles.code UNIQUE).
@@ -25,6 +25,8 @@ var (
 type RoleRepository interface {
 	List() ([]*models.Role, error)
 	GetByID(id int) (*models.Role, error)
+	// GetByCode возвращает роль по коду (например, models.RoleCodeAdmin).
+	GetByCode(code string) (*models.Role, error)
 	// Create сохраняет новую роль, заполняя role.ID/CreatedAt/UpdatedAt значениями из БД.
 	Create(role *models.Role) error
 	// Update полностью перезаписывает роль role.ID новым состоянием. Какие поля патчить,
@@ -77,6 +79,22 @@ func (r *roleRepository) GetByID(id int) (*models.Role, error) {
 			return nil, ErrRoleNotFound
 		}
 		return nil, fmt.Errorf("error getting role: %w", err)
+	}
+
+	return role, nil
+}
+
+// GetByCode возвращает роль по коду.
+func (r *roleRepository) GetByCode(code string) (*models.Role, error) {
+	role := &models.Role{}
+
+	err := r.db.QueryRow(`SELECT id, name, code, created_at, updated_at FROM roles WHERE code = $1`, code).
+		Scan(&role.ID, &role.Name, &role.Code, &role.CreatedAt, &role.UpdatedAt)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrRoleNotFound
+		}
+		return nil, fmt.Errorf("error getting role by code: %w", err)
 	}
 
 	return role, nil

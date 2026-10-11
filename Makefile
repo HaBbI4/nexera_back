@@ -4,7 +4,7 @@ DOCKER_IMAGE=nexera_back
 VERSION=latest
 
 # Go команды
-.PHONY: build run swagger docker-build docker-run up down logs dev-up dev-down health migrate-up migrate-down migrate-create
+.PHONY: build run swagger docker-build docker-run up down logs dev-up dev-down health migrate-up migrate-down migrate-create create-admin
 
 # Сборка бинарника
 build:
@@ -82,3 +82,8 @@ migrate-down:
 migrate-create:
 	@migrate create -seq -ext sql -dir migrations $(name)
 
+# Создать администратора админ-панели (роль admin заводит миграция 010): make create-admin email=admin@example.com [name="Имя"]
+# Пароль спрашивается в терминале; для неинтерактивного запуска — переменная ADMIN_PASSWORD.
+create-admin:
+	@set -a; . ./.env; set +a; \
+	go run ./cmd/cli create-admin --email "$(email)" $(if $(name),--name "$(name)")

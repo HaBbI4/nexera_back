@@ -50,6 +50,16 @@ func (f *fakeRoleRepository) GetByID(id int) (*models.Role, error) {
 	return &copied, nil
 }
 
+func (f *fakeRoleRepository) GetByCode(code string) (*models.Role, error) {
+	for _, r := range f.roles {
+		if r.Code == code {
+			copied := *r
+			return &copied, nil
+		}
+	}
+	return nil, repository.ErrRoleNotFound
+}
+
 func (f *fakeRoleRepository) codeTaken(code string, exceptID int) bool {
 	for _, r := range f.roles {
 		if r.ID != exceptID && r.Code == code {

@@ -1,11 +1,4 @@
 definitions:
-  internal_handlers.ErrorResponse:
-    properties:
-      error:
-        type: string
-      message:
-        type: string
-    type: object
   internal_handlers.HealthResponse:
     properties:
       services:
@@ -19,197 +12,258 @@ definitions:
       version:
         type: string
     type: object
-  my-blog_internal_models.Car:
+  nexera_back_internal_httpresponse.ErrorResponse:
     properties:
-      brand:
+      error:
         type: string
-      comment:
+      message:
         type: string
+    type: object
+  nexera_back_internal_models.Banner:
+    properties:
       created_at:
         type: string
-      customer_id:
-        type: integer
+      description:
+        type: string
+      ends_at:
+        type: string
       id:
         type: integer
-      license_plate:
-        type: string
-      model:
-        type: string
-      updated_at:
-        type: string
-      vin:
-        type: string
-      year:
-        type: integer
-    type: object
-  my-blog_internal_models.CreateCustomerRequest:
-    properties:
-      comment:
-        type: string
-      email:
-        type: string
-      name:
-        type: string
-      phone:
-        type: string
-    type: object
-  my-blog_internal_models.CreateOrderItemRequest:
-    properties:
-      comment:
-        type: string
-      price:
-        type: number
-      quantity:
-        type: integer
-      service_description:
-        type: string
-      service_id:
-        type: integer
-      service_is_active:
-        type: boolean
-      service_name:
-        type: string
-    type: object
-  my-blog_internal_models.CreateOrderRequest:
-    properties:
-      car_id:
-        type: integer
-      comment:
-        type: string
-      customer_id:
-        type: integer
-      items:
-        items:
-          $ref: '#/definitions/my-blog_internal_models.CreateOrderItemRequest'
-        type: array
-      scheduled_at:
-        type: string
-      status:
-        type: string
-    type: object
-  my-blog_internal_models.CreateServiceRequest:
-    properties:
-      description:
+      image_url:
         type: string
       is_active:
         type: boolean
-      name:
+      link_title:
+        type: string
+      link_url:
+        type: string
+      page:
+        $ref: '#/definitions/nexera_back_internal_models.Page'
+      page_id:
+        type: integer
+      position:
+        type: integer
+      starts_at:
+        type: string
+      subtitle:
+        type: string
+      title:
+        type: string
+      updated_at:
         type: string
     type: object
-  my-blog_internal_models.Customer:
+  nexera_back_internal_models.CreateFAQRequest:
     properties:
-      comment:
+      answer:
         type: string
-      created_at:
+      is_published:
+        type: boolean
+      position:
+        type: integer
+      question:
         type: string
+    type: object
+  nexera_back_internal_models.CreateLeadRequest:
+    properties:
       email:
         type: string
-      id:
-        type: integer
+      message:
+        type: string
       name:
         type: string
       phone:
         type: string
-      updated_at:
-        type: string
-    type: object
-  my-blog_internal_models.Order:
-    properties:
-      car:
-        $ref: '#/definitions/my-blog_internal_models.Car'
-      car_id:
-        type: integer
-      comment:
-        type: string
-      completed_at:
-        type: string
-      created_at:
-        type: string
-      customer:
-        $ref: '#/definitions/my-blog_internal_models.Customer'
-      customer_id:
-        type: integer
-      id:
-        type: integer
-      items:
-        items:
-          $ref: '#/definitions/my-blog_internal_models.OrderItem'
-        type: array
-      media:
-        items:
-          $ref: '#/definitions/my-blog_internal_models.OrderMedia'
-        type: array
-      scheduled_at:
-        type: string
-      started_at:
-        type: string
-      status:
-        $ref: '#/definitions/my-blog_internal_models.OrderStatus'
-      total_amount:
-        type: number
-      updated_at:
-        type: string
-    type: object
-  my-blog_internal_models.OrderItem:
-    properties:
-      comment:
-        type: string
-      created_at:
-        type: string
-      id:
-        type: integer
-      order_id:
-        type: integer
-      price:
-        type: number
-      quantity:
-        type: integer
       service_id:
         type: integer
-      service_name:
+      source:
         type: string
-    type: object
-  my-blog_internal_models.OrderMedia:
-    properties:
-      comment:
-        type: string
-      created_at:
-        type: string
-      file_size:
-        type: integer
-      id:
-        type: integer
-      mime_type:
-        type: string
-      order_id:
-        type: integer
-      stage:
-        type: string
-      storage_key:
-        type: string
-      type:
-        type: string
-      url:
+      website:
         description: |-
-          URL постоянная публичная ссылка на файл, вычисляется на лету из StorageKey
-          текущим драйвером хранилища и не хранится в БД.
+          Website — honeypot: скрытое поле формы, человек его не видит и не заполняет.
+          Заполнено — запрос отправил бот (см. services.ErrSpamDetected). Должно быть пустым.
         type: string
     type: object
-  my-blog_internal_models.OrderStatus:
-    enum:
-    - created
-    - scheduled
-    - in_progress
-    - completed
-    - cancelled
-    type: string
-    x-enum-varnames:
-    - OrderStatusCreated
-    - OrderStatusScheduled
-    - OrderStatusInProgress
-    - OrderStatusCompleted
-    - OrderStatusCancelled
-  my-blog_internal_models.Service:
+  nexera_back_internal_models.CreatePageRequest:
+    properties:
+      name:
+        type: string
+      slug:
+        type: string
+    type: object
+  nexera_back_internal_models.CreateReviewRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+      rating:
+        type: integer
+      text:
+        type: string
+      website:
+        description: |-
+          Website — honeypot: скрытое поле формы, человек его не видит и не заполняет.
+          Заполнено — запрос отправил бот (см. services.ErrSpamDetected). Должно быть пустым.
+        type: string
+    type: object
+  nexera_back_internal_models.CreateRoleRequest:
+    properties:
+      code:
+        type: string
+      name:
+        type: string
+    type: object
+  nexera_back_internal_models.CreateServiceRequest:
+    properties:
+      description:
+        type: string
+      is_published:
+        type: boolean
+      name:
+        type: string
+      position:
+        type: integer
+      price:
+        type: integer
+    type: object
+  nexera_back_internal_models.CreateTelegramUserRequest:
+    properties:
+      chat_id:
+        type: integer
+      is_active:
+        type: boolean
+      name:
+        type: string
+    type: object
+  nexera_back_internal_models.CreateUserRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      role_id:
+        type: integer
+    type: object
+  nexera_back_internal_models.FAQ:
+    properties:
+      answer:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      is_published:
+        type: boolean
+      position:
+        type: integer
+      question:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  nexera_back_internal_models.Lead:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      message:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+      service:
+        $ref: '#/definitions/nexera_back_internal_models.Service'
+      service_id:
+        type: integer
+      source:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  nexera_back_internal_models.Page:
+    properties:
+      banners:
+        description: |-
+          Banners заполняется только при получении одной страницы по ID (см.
+          PageService.GetPublicByIDWithBanners) — список баннеров, видимых прямо сейчас,
+          отсортированных по Position. При List() всегда nil, в БД не хранится.
+        items:
+          $ref: '#/definitions/nexera_back_internal_models.Banner'
+        type: array
+      created_at:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      slug:
+        type: string
+    type: object
+  nexera_back_internal_models.PublicReview:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      rating:
+        type: integer
+      text:
+        type: string
+    type: object
+  nexera_back_internal_models.Review:
+    properties:
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      is_approved:
+        type: boolean
+      name:
+        type: string
+      phone:
+        type: string
+      rating:
+        type: integer
+      text:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  nexera_back_internal_models.ReviewSummary:
+    properties:
+      average_rating:
+        type: number
+      count:
+        type: integer
+    type: object
+  nexera_back_internal_models.Role:
+    properties:
+      code:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  nexera_back_internal_models.Service:
     properties:
       created_at:
         type: string
@@ -217,10 +271,112 @@ definitions:
         type: string
       id:
         type: integer
+      is_published:
+        type: boolean
+      name:
+        type: string
+      position:
+        type: integer
+      price:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  nexera_back_internal_models.TelegramUser:
+    properties:
+      chat_id:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: integer
       is_active:
         type: boolean
       name:
         type: string
+      updated_at:
+        type: string
+    type: object
+  nexera_back_internal_models.UpdateFAQRequest:
+    properties:
+      answer:
+        type: string
+      is_published:
+        type: boolean
+      position:
+        type: integer
+      question:
+        type: string
+    type: object
+  nexera_back_internal_models.UpdatePageRequest:
+    properties:
+      name:
+        type: string
+      slug:
+        type: string
+    type: object
+  nexera_back_internal_models.UpdateRoleRequest:
+    properties:
+      code:
+        type: string
+      name:
+        type: string
+    type: object
+  nexera_back_internal_models.UpdateServiceRequest:
+    properties:
+      description:
+        type: string
+      is_published:
+        type: boolean
+      name:
+        type: string
+      position:
+        type: integer
+      price:
+        type: integer
+    type: object
+  nexera_back_internal_models.UpdateTelegramUserRequest:
+    properties:
+      chat_id:
+        type: integer
+      is_active:
+        type: boolean
+      name:
+        type: string
+    type: object
+  nexera_back_internal_models.UpdateUserRequest:
+    properties:
+      email:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+      password:
+        type: string
+      role_id:
+        type: integer
+    type: object
+  nexera_back_internal_models.User:
+    properties:
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      last_login_at:
+        type: string
+      name:
+        type: string
+      role:
+        $ref: '#/definitions/nexera_back_internal_models.Role'
+      role_id:
+        type: integer
       updated_at:
         type: string
     type: object
@@ -229,17 +385,34 @@ info:
     email: 911gtrss@gmail.com
     name: API Support
   description: |-
-    API для системы учета и записи автомобилей на детейлинг услуги.
-    Позволяет управлять клиентами, автомобилями, услугами и заказами.
+    API сайта-визитки: баннеры, страницы, услуги, FAQ, отзывы и заявки.
+    Админ-панель управляет контентом, модерирует отзывы и пользователями telegram-бота.
   license:
     name: Proprietary
-  title: Detailing CRM API
+  title: Nexera Back API
   version: "1.0"
 paths:
-  /api/v1/cars:
+  /api/v1/admin/banners:
     get:
-      description: Возвращает список автомобилей с пагинацией
+      description: Возвращает все баннеры, включая выключенные и находящиеся вне окна
+        показа. Требует авторизации.
       parameters:
+      - description: ID страницы — вернуть баннеры только этой страницы
+        in: query
+        name: page_id
+        type: integer
+      - description: true — только включенные, false — только выключенные
+        in: query
+        name: is_active
+        type: boolean
+      - description: 'Поле сортировки: position (по умолчанию) или created_at'
+        in: query
+        name: sort
+        type: string
+      - description: 'Направление сортировки: asc (по умолчанию) или desc'
+        in: query
+        name: order
+        type: string
       - description: Количество записей (по умолчанию 50, максимум 100)
         in: query
         name: limit
@@ -255,301 +428,2134 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/my-blog_internal_models.Car'
+              $ref: '#/definitions/nexera_back_internal_models.Banner'
             type: array
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/internal_handlers.ErrorResponse'
-      summary: Список автомобилей
-      tags:
-      - cars
-  /api/v1/cars/{id}:
-    get:
-      description: Возвращает автомобиль по ID
-      parameters:
-      - description: ID автомобиля
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/my-blog_internal_models.Car'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/internal_handlers.ErrorResponse'
-        "404":
-          description: Not Found
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
           schema:
-            $ref: '#/definitions/internal_handlers.ErrorResponse'
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_handlers.ErrorResponse'
-      summary: Получить автомобиль
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Список баннеров (админка)
       tags:
-      - cars
-  /api/v1/customers:
-    get:
-      description: Возвращает список клиентов с пагинацией
-      parameters:
-      - description: Количество записей (по умолчанию 50, максимум 100)
-        in: query
-        name: limit
-        type: integer
-      - description: Смещение (по умолчанию 0)
-        in: query
-        name: offset
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/my-blog_internal_models.Customer'
-            type: array
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/internal_handlers.ErrorResponse'
-      summary: Список клиентов
-      tags:
-      - customers
-    post:
-      consumes:
-      - application/json
-      description: Создает нового клиента
-      parameters:
-      - description: Данные клиента
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/my-blog_internal_models.CreateCustomerRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/my-blog_internal_models.Customer'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/internal_handlers.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/internal_handlers.ErrorResponse'
-      summary: Создать клиента
-      tags:
-      - customers
-  /api/v1/customers/{id}:
-    get:
-      description: Возвращает клиента по ID
-      parameters:
-      - description: ID клиента
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/my-blog_internal_models.Customer'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/internal_handlers.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/internal_handlers.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/internal_handlers.ErrorResponse'
-      summary: Получить клиента
-      tags:
-      - customers
-  /api/v1/orders:
-    get:
-      description: Возвращает список заказов с автомобилем, клиентом, услугами и медиа
-      parameters:
-      - description: Количество записей (по умолчанию 50, максимум 100)
-        in: query
-        name: limit
-        type: integer
-      - description: Смещение (по умолчанию 0)
-        in: query
-        name: offset
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/my-blog_internal_models.Order'
-            type: array
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/internal_handlers.ErrorResponse'
-      summary: Список заказов
-      tags:
-      - orders
-    post:
-      consumes:
-      - application/json
-      description: Создает заказ с услугами. В каждом item указывается либо service_id
-        (существующая услуга), либо service_name (+ опционально service_description,
-        service_is_active) для создания новой услуги на лету.
-      parameters:
-      - description: Данные заказа
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/my-blog_internal_models.CreateOrderRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/my-blog_internal_models.Order'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/internal_handlers.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/internal_handlers.ErrorResponse'
-      summary: Создать заказ
-      tags:
-      - orders
-  /api/v1/orders/{id}:
-    get:
-      description: Возвращает заказ по ID вместе с автомобилем, клиентом, услугами
-        и медиа
-      parameters:
-      - description: ID заказа
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/my-blog_internal_models.Order'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/internal_handlers.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/internal_handlers.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/internal_handlers.ErrorResponse'
-      summary: Получить заказ
-      tags:
-      - orders
-  /api/v1/orders/{id}/media:
+      - admin-banners
     post:
       consumes:
       - multipart/form-data
-      description: Загружает фото/видео к уже созданному заказу (до 10 файлов за запрос)
+      description: Создает новый баннер. Картинка — либо файл (поле image), либо готовый
+        URL (поле image_url). Требует авторизации.
       parameters:
-      - description: ID заказа
+      - description: ID страницы
+        in: formData
+        name: page_id
+        required: true
+        type: integer
+      - description: Заголовок
+        in: formData
+        name: title
+        required: true
+        type: string
+      - description: Подзаголовок
+        in: formData
+        name: subtitle
+        type: string
+      - description: Описание
+        in: formData
+        name: description
+        type: string
+      - description: Текст ссылки
+        in: formData
+        name: link_title
+        type: string
+      - description: URL ссылки
+        in: formData
+        name: link_url
+        type: string
+      - description: Файл изображения (альтернатива image_url)
+        in: formData
+        name: image
+        type: file
+      - description: Готовый URL изображения (альтернатива файлу)
+        in: formData
+        name: image_url
+        type: string
+      - description: Порядок показа
+        in: formData
+        name: position
+        type: integer
+      - description: Начало показа, RFC3339
+        in: formData
+        name: starts_at
+        type: string
+      - description: Конец показа, RFC3339
+        in: formData
+        name: ends_at
+        type: string
+      - description: Активен
+        in: formData
+        name: is_active
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/nexera_back_internal_models.Banner'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "415":
+          description: Unsupported Media Type
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Создать баннер
+      tags:
+      - admin-banners
+  /api/v1/admin/banners/{id}:
+    delete:
+      description: Удаляет баннер по ID. Требует авторизации.
+      parameters:
+      - description: ID баннера
         in: path
         name: id
         required: true
         type: integer
-      - description: 'Этап съемки: before или after (по умолчанию before)'
-        in: formData
-        name: stage
-        type: string
-      - description: Файлы (фото/видео)
-        in: formData
-        name: files
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Удалить баннер
+      tags:
+      - admin-banners
+    get:
+      description: Возвращает баннер по ID, включая выключенный и находящийся вне
+        окна показа. Требует авторизации.
+      parameters:
+      - description: ID баннера
+        in: path
+        name: id
         required: true
-        type: file
+        type: integer
       produces:
       - application/json
       responses:
-        "201":
-          description: Created
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/nexera_back_internal_models.Banner'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Получить баннер (админка)
+      tags:
+      - admin-banners
+    patch:
+      consumes:
+      - multipart/form-data
+      description: Частично обновляет баннер по ID. Требует авторизации.
+      parameters:
+      - description: ID баннера
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: ID страницы
+        in: formData
+        name: page_id
+        type: integer
+      - description: Заголовок
+        in: formData
+        name: title
+        type: string
+      - description: Подзаголовок
+        in: formData
+        name: subtitle
+        type: string
+      - description: Описание
+        in: formData
+        name: description
+        type: string
+      - description: Текст ссылки
+        in: formData
+        name: link_title
+        type: string
+      - description: URL ссылки
+        in: formData
+        name: link_url
+        type: string
+      - description: Новый файл изображения (альтернатива image_url)
+        in: formData
+        name: image
+        type: file
+      - description: Новый URL изображения (альтернатива файлу)
+        in: formData
+        name: image_url
+        type: string
+      - description: Порядок показа
+        in: formData
+        name: position
+        type: integer
+      - description: Начало показа, RFC3339
+        in: formData
+        name: starts_at
+        type: string
+      - description: Конец показа, RFC3339
+        in: formData
+        name: ends_at
+        type: string
+      - description: Активен
+        in: formData
+        name: is_active
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/nexera_back_internal_models.Banner'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "415":
+          description: Unsupported Media Type
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Обновить баннер
+      tags:
+      - admin-banners
+  /api/v1/admin/faq:
+    get:
+      description: Возвращает все вопросы-ответы, включая неопубликованные. Требует
+        авторизации.
+      parameters:
+      - description: true — только опубликованные, false — только скрытые
+        in: query
+        name: is_published
+        type: boolean
+      - description: 'Поле сортировки: position (по умолчанию) или created_at'
+        in: query
+        name: sort
+        type: string
+      - description: 'Направление сортировки: asc (по умолчанию) или desc'
+        in: query
+        name: order
+        type: string
+      - description: Количество записей (по умолчанию 50, максимум 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Смещение (по умолчанию 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
           schema:
             items:
-              $ref: '#/definitions/my-blog_internal_models.OrderMedia'
+              $ref: '#/definitions/nexera_back_internal_models.FAQ'
             type: array
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/internal_handlers.ErrorResponse'
-        "404":
-          description: Not Found
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
           schema:
-            $ref: '#/definitions/internal_handlers.ErrorResponse'
-        "415":
-          description: Unsupported Media Type
-          schema:
-            $ref: '#/definitions/internal_handlers.ErrorResponse'
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_handlers.ErrorResponse'
-      summary: Добавить медиа к заказу
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Список FAQ (админка)
       tags:
-      - orders
-  /api/v1/services:
+      - admin-faq
     post:
       consumes:
       - application/json
-      description: Создает новую услугу в каталоге
+      description: Создает новый вопрос-ответ. Требует авторизации.
       parameters:
-      - description: Данные услуги
+      - description: Данные FAQ
         in: body
-        name: request
+        name: faq
         required: true
         schema:
-          $ref: '#/definitions/my-blog_internal_models.CreateServiceRequest'
+          $ref: '#/definitions/nexera_back_internal_models.CreateFAQRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/my-blog_internal_models.Service'
+            $ref: '#/definitions/nexera_back_internal_models.FAQ'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/internal_handlers.ErrorResponse'
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_handlers.ErrorResponse'
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Создать FAQ
+      tags:
+      - admin-faq
+  /api/v1/admin/faq/{id}:
+    delete:
+      description: Удаляет вопрос-ответ по ID. Требует авторизации.
+      parameters:
+      - description: ID записи FAQ
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Удалить FAQ
+      tags:
+      - admin-faq
+    get:
+      description: Возвращает вопрос-ответ по ID, включая неопубликованный. Требует
+        авторизации.
+      parameters:
+      - description: ID записи FAQ
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/nexera_back_internal_models.FAQ'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Получить FAQ (админка)
+      tags:
+      - admin-faq
+    patch:
+      consumes:
+      - application/json
+      description: Частично обновляет вопрос-ответ по ID. Требует авторизации.
+      parameters:
+      - description: ID записи FAQ
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Поля для обновления
+        in: body
+        name: faq
+        required: true
+        schema:
+          $ref: '#/definitions/nexera_back_internal_models.UpdateFAQRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/nexera_back_internal_models.FAQ'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Обновить FAQ
+      tags:
+      - admin-faq
+  /api/v1/admin/leads:
+    get:
+      description: Возвращает заявки клиентов (вместе с услугой, если она указана)
+        с фильтрацией по услуге, источнику и периоду создания. Требует авторизации.
+      parameters:
+      - description: ID услуги — вернуть только заявки на эту услугу
+        in: query
+        name: service_id
+        type: integer
+      - description: Источник заявки (например contact_form)
+        in: query
+        name: source
+        type: string
+      - description: Создана не раньше, RFC3339
+        in: query
+        name: created_from
+        type: string
+      - description: Создана не позже, RFC3339
+        in: query
+        name: created_to
+        type: string
+      - description: 'Поле сортировки: created_at (по умолчанию) или name'
+        in: query
+        name: sort
+        type: string
+      - description: 'Направление сортировки: desc (по умолчанию) или asc'
+        in: query
+        name: order
+        type: string
+      - description: Количество записей (по умолчанию 50, максимум 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Смещение (по умолчанию 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/nexera_back_internal_models.Lead'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Список заявок
+      tags:
+      - admin-leads
+  /api/v1/admin/leads/{id}:
+    delete:
+      description: Удаляет заявку клиента по ID. Требует авторизации.
+      parameters:
+      - description: ID заявки
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Удалить заявку
+      tags:
+      - admin-leads
+    get:
+      description: Возвращает заявку клиента по ID вместе с услугой (service), если
+        она указана и еще существует. Требует авторизации.
+      parameters:
+      - description: ID заявки
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/nexera_back_internal_models.Lead'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Получить заявку
+      tags:
+      - admin-leads
+  /api/v1/admin/pages:
+    post:
+      consumes:
+      - application/json
+      description: Создает новую страницу. Требует авторизации.
+      parameters:
+      - description: Данные страницы
+        in: body
+        name: page
+        required: true
+        schema:
+          $ref: '#/definitions/nexera_back_internal_models.CreatePageRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/nexera_back_internal_models.Page'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Создать страницу
+      tags:
+      - admin-pages
+  /api/v1/admin/pages/{id}:
+    delete:
+      description: Удаляет страницу по ID вместе со всеми ее баннерами (ON DELETE
+        CASCADE). Требует авторизации.
+      parameters:
+      - description: ID страницы
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Удалить страницу
+      tags:
+      - admin-pages
+    patch:
+      consumes:
+      - application/json
+      description: Частично обновляет страницу по ID. Требует авторизации.
+      parameters:
+      - description: ID страницы
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Поля для обновления
+        in: body
+        name: page
+        required: true
+        schema:
+          $ref: '#/definitions/nexera_back_internal_models.UpdatePageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/nexera_back_internal_models.Page'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Обновить страницу
+      tags:
+      - admin-pages
+  /api/v1/admin/reviews:
+    get:
+      description: Возвращает отзывы клиентов с контактными данными, включая неодобренные
+        (очередь модерации — ?is_approved=false). Удаленные отзывы не возвращаются.
+        Требует авторизации.
+      parameters:
+      - description: true — только одобренные, false — только ожидающие модерации
+        in: query
+        name: is_approved
+        type: boolean
+      - description: Оценка не ниже (1-5)
+        in: query
+        name: rating_min
+        type: integer
+      - description: Создан не раньше, RFC3339
+        in: query
+        name: created_from
+        type: string
+      - description: Создан не позже, RFC3339
+        in: query
+        name: created_to
+        type: string
+      - description: 'Поле сортировки: created_at (по умолчанию) или rating'
+        in: query
+        name: sort
+        type: string
+      - description: 'Направление сортировки: desc (по умолчанию) или asc'
+        in: query
+        name: order
+        type: string
+      - description: Количество записей (по умолчанию 50, максимум 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Смещение (по умолчанию 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/nexera_back_internal_models.Review'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Список отзывов (админка)
+      tags:
+      - admin-reviews
+  /api/v1/admin/reviews/{id}:
+    delete:
+      description: 'Удаляет отзыв по ID: он пропадает и с сайта, и из админки. Требует
+        авторизации.'
+      parameters:
+      - description: ID отзыва
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Удалить отзыв
+      tags:
+      - admin-reviews
+    get:
+      description: Возвращает отзыв по ID вместе с контактными данными клиента, включая
+        неодобренный. Требует авторизации.
+      parameters:
+      - description: ID отзыва
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/nexera_back_internal_models.Review'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Получить отзыв (админка)
+      tags:
+      - admin-reviews
+  /api/v1/admin/reviews/{id}/approve:
+    post:
+      description: Одобряет отзыв по ID — он появляется на сайте. Повторное одобрение
+        не ошибка. Требует авторизации.
+      parameters:
+      - description: ID отзыва
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/nexera_back_internal_models.Review'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Одобрить отзыв
+      tags:
+      - admin-reviews
+  /api/v1/admin/reviews/{id}/unapprove:
+    post:
+      description: Снимает одобрение с отзыва по ID — он пропадает с сайта, но не
+        удаляется. Для неодобренного отзыва не ошибка. Требует авторизации.
+      parameters:
+      - description: ID отзыва
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/nexera_back_internal_models.Review'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Снять одобрение с отзыва
+      tags:
+      - admin-reviews
+  /api/v1/admin/roles:
+    get:
+      description: Возвращает все роли пользователей админ-панели. Требует роли admin.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/nexera_back_internal_models.Role'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Список ролей
+      tags:
+      - admin-roles
+    post:
+      consumes:
+      - application/json
+      description: Создает новую роль. code — латиница в нижнем регистре, цифры и
+        "_", начинается с буквы, 2–50 символов. Требует роли admin.
+      parameters:
+      - description: Данные роли
+        in: body
+        name: role
+        required: true
+        schema:
+          $ref: '#/definitions/nexera_back_internal_models.CreateRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/nexera_back_internal_models.Role'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Создать роль
+      tags:
+      - admin-roles
+  /api/v1/admin/roles/{id}:
+    delete:
+      description: Удаляет роль по ID. Роль, назначенную пользователям (в т.ч. удаленным),
+        удалить нельзя. Требует роли admin.
+      parameters:
+      - description: ID роли
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Удалить роль
+      tags:
+      - admin-roles
+    get:
+      description: Возвращает роль по ID. Требует роли admin.
+      parameters:
+      - description: ID роли
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/nexera_back_internal_models.Role'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Получить роль
+      tags:
+      - admin-roles
+    patch:
+      consumes:
+      - application/json
+      description: Частично обновляет роль по ID. Code роли admin менять нельзя. Требует
+        роли admin.
+      parameters:
+      - description: ID роли
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Поля для обновления
+        in: body
+        name: role
+        required: true
+        schema:
+          $ref: '#/definitions/nexera_back_internal_models.UpdateRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/nexera_back_internal_models.Role'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Обновить роль
+      tags:
+      - admin-roles
+  /api/v1/admin/services:
+    get:
+      description: Возвращает все услуги, включая неопубликованные. Требует авторизации.
+      parameters:
+      - description: true — только опубликованные, false — только скрытые
+        in: query
+        name: is_published
+        type: boolean
+      - description: Цена не меньше (включительно)
+        in: query
+        name: price_from
+        type: integer
+      - description: Цена не больше (включительно)
+        in: query
+        name: price_to
+        type: integer
+      - description: 'Поле сортировки: position (по умолчанию), price, name или created_at'
+        in: query
+        name: sort
+        type: string
+      - description: 'Направление сортировки: asc (по умолчанию) или desc'
+        in: query
+        name: order
+        type: string
+      - description: Количество записей (по умолчанию 50, максимум 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Смещение (по умолчанию 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/nexera_back_internal_models.Service'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Список услуг (админка)
+      tags:
+      - admin-services
+    post:
+      consumes:
+      - application/json
+      description: Создает новую услугу. Без price — "цена по запросу". Требует авторизации.
+      parameters:
+      - description: Данные услуги
+        in: body
+        name: service
+        required: true
+        schema:
+          $ref: '#/definitions/nexera_back_internal_models.CreateServiceRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/nexera_back_internal_models.Service'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
       summary: Создать услугу
+      tags:
+      - admin-services
+  /api/v1/admin/services/{id}:
+    delete:
+      description: Удаляет услугу по ID. Заявки на нее остаются, но без ссылки на
+        услугу. Требует авторизации.
+      parameters:
+      - description: ID услуги
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Удалить услугу
+      tags:
+      - admin-services
+    get:
+      description: Возвращает услугу по ID, включая неопубликованную. Требует авторизации.
+      parameters:
+      - description: ID услуги
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/nexera_back_internal_models.Service'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Получить услугу (админка)
+      tags:
+      - admin-services
+    patch:
+      consumes:
+      - application/json
+      description: Частично обновляет услугу по ID. Требует авторизации.
+      parameters:
+      - description: ID услуги
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Поля для обновления
+        in: body
+        name: service
+        required: true
+        schema:
+          $ref: '#/definitions/nexera_back_internal_models.UpdateServiceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/nexera_back_internal_models.Service'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Обновить услугу
+      tags:
+      - admin-services
+  /api/v1/admin/telegram-users:
+    get:
+      description: Возвращает всех пользователей бота, включая отключенных. Только
+        для роли admin.
+      parameters:
+      - description: true — только активные, false — только отключенные
+        in: query
+        name: is_active
+        type: boolean
+      - description: 'Поле сортировки: created_at (по умолчанию) или name'
+        in: query
+        name: sort
+        type: string
+      - description: 'Направление сортировки: asc (по умолчанию) или desc'
+        in: query
+        name: order
+        type: string
+      - description: Количество записей (по умолчанию 50, максимум 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Смещение (по умолчанию 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/nexera_back_internal_models.TelegramUser'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Список пользователей telegram-бота
+      tags:
+      - admin-telegram-users
+    post:
+      consumes:
+      - application/json
+      description: Добавляет пользователя бота по chat_id. Без is_active создается
+        активным. Только для роли admin.
+      parameters:
+      - description: Данные пользователя бота
+        in: body
+        name: telegram_user
+        required: true
+        schema:
+          $ref: '#/definitions/nexera_back_internal_models.CreateTelegramUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/nexera_back_internal_models.TelegramUser'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Добавить пользователя telegram-бота
+      tags:
+      - admin-telegram-users
+  /api/v1/admin/telegram-users/{id}:
+    delete:
+      description: 'Удаляет пользователя бота по ID: он сразу теряет доступ к боту.
+        Только для роли admin.'
+      parameters:
+      - description: ID пользователя бота
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Удалить пользователя telegram-бота
+      tags:
+      - admin-telegram-users
+    get:
+      description: Возвращает пользователя бота по ID. Только для роли admin.
+      parameters:
+      - description: ID пользователя бота
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/nexera_back_internal_models.TelegramUser'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Получить пользователя telegram-бота
+      tags:
+      - admin-telegram-users
+    patch:
+      consumes:
+      - application/json
+      description: Частично обновляет пользователя бота по ID (например, is_active=false
+        отключает доступ и уведомления). Только для роли admin.
+      parameters:
+      - description: ID пользователя бота
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Поля для обновления
+        in: body
+        name: telegram_user
+        required: true
+        schema:
+          $ref: '#/definitions/nexera_back_internal_models.UpdateTelegramUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/nexera_back_internal_models.TelegramUser'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Обновить пользователя telegram-бота
+      tags:
+      - admin-telegram-users
+  /api/v1/admin/users:
+    get:
+      description: Возвращает пользователей админ-панели (без удаленных) с фильтрацией
+        по роли и активности. Требует роли admin.
+      parameters:
+      - description: ID роли — вернуть только пользователей с этой ролью
+        in: query
+        name: role_id
+        type: integer
+      - description: true — только активные, false — только отключенные
+        in: query
+        name: is_active
+        type: boolean
+      - description: 'Поле сортировки: created_at (по умолчанию), name или email'
+        in: query
+        name: sort
+        type: string
+      - description: 'Направление сортировки: asc (по умолчанию) или desc'
+        in: query
+        name: order
+        type: string
+      - description: Количество записей (по умолчанию 50, максимум 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Смещение (по умолчанию 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/nexera_back_internal_models.User'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Список пользователей
+      tags:
+      - admin-users
+    post:
+      consumes:
+      - application/json
+      description: Создает нового пользователя админ-панели. Пароль хранится только
+        в виде bcrypt-хеша. Требует роли admin.
+      parameters:
+      - description: Данные пользователя
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/nexera_back_internal_models.CreateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/nexera_back_internal_models.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Создать пользователя
+      tags:
+      - admin-users
+  /api/v1/admin/users/{id}:
+    delete:
+      description: Мягко удаляет пользователя по ID. Удалить самого себя нельзя. Требует
+        роли admin.
+      parameters:
+      - description: ID пользователя
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Удалить пользователя
+      tags:
+      - admin-users
+    get:
+      description: Возвращает пользователя админ-панели по ID. Требует роли admin.
+      parameters:
+      - description: ID пользователя
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/nexera_back_internal_models.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Получить пользователя
+      tags:
+      - admin-users
+    patch:
+      consumes:
+      - application/json
+      description: Частично обновляет пользователя по ID. Сменить роль самому себе
+        нельзя. Требует роли admin.
+      parameters:
+      - description: ID пользователя
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Поля для обновления
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/nexera_back_internal_models.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/nexera_back_internal_models.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Обновить пользователя
+      tags:
+      - admin-users
+  /api/v1/banners:
+    get:
+      description: Возвращает баннеры, видимые прямо сейчас (активные и в окне показа),
+        с фильтрацией по странице и сортировкой
+      parameters:
+      - description: ID страницы — вернуть баннеры только этой страницы
+        in: query
+        name: page_id
+        type: integer
+      - description: 'Поле сортировки: position (по умолчанию) или created_at'
+        in: query
+        name: sort
+        type: string
+      - description: 'Направление сортировки: asc (по умолчанию) или desc'
+        in: query
+        name: order
+        type: string
+      - description: Количество записей (по умолчанию 50, максимум 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Смещение (по умолчанию 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/nexera_back_internal_models.Banner'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Список баннеров
+      tags:
+      - banners
+  /api/v1/banners/{id}:
+    get:
+      description: Возвращает баннер по ID, если он активен и находится в окне показа
+      parameters:
+      - description: ID баннера
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/nexera_back_internal_models.Banner'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Получить баннер
+      tags:
+      - banners
+  /api/v1/faq:
+    get:
+      description: Возвращает опубликованные вопросы-ответы с сортировкой и пагинацией
+      parameters:
+      - description: 'Поле сортировки: position (по умолчанию) или created_at'
+        in: query
+        name: sort
+        type: string
+      - description: 'Направление сортировки: asc (по умолчанию) или desc'
+        in: query
+        name: order
+        type: string
+      - description: Количество записей (по умолчанию 50, максимум 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Смещение (по умолчанию 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/nexera_back_internal_models.FAQ'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Список FAQ
+      tags:
+      - faq
+  /api/v1/faq/{id}:
+    get:
+      description: Возвращает вопрос-ответ по ID, если он опубликован
+      parameters:
+      - description: ID записи FAQ
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/nexera_back_internal_models.FAQ'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Получить FAQ
+      tags:
+      - faq
+  /api/v1/leads:
+    post:
+      consumes:
+      - application/json
+      description: Создает заявку клиента с сайта. Телефон — в международном формате
+        (+79991234567), пробелы/скобки/дефисы допускаются. source по умолчанию — contact_form.
+      parameters:
+      - description: Данные заявки
+        in: body
+        name: lead
+        required: true
+        schema:
+          $ref: '#/definitions/nexera_back_internal_models.CreateLeadRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/nexera_back_internal_models.Lead'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Оставить заявку
+      tags:
+      - leads
+  /api/v1/pages:
+    get:
+      description: Возвращает все страницы сайта (без баннеров)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/nexera_back_internal_models.Page'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Список страниц
+      tags:
+      - pages
+  /api/v1/pages/{id}:
+    get:
+      description: Возвращает страницу по ID вместе с баннерами (активными и в окне
+        показа), отсортированными по позиции
+      parameters:
+      - description: ID страницы
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/nexera_back_internal_models.Page'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Получить страницу
+      tags:
+      - pages
+  /api/v1/reviews:
+    get:
+      description: Возвращает одобренные отзывы клиентов (без контактных данных) с
+        фильтрацией по минимальной оценке, сортировкой и пагинацией.
+      parameters:
+      - description: Оценка не ниже (1-5)
+        in: query
+        name: rating_min
+        type: integer
+      - description: 'Поле сортировки: created_at (по умолчанию) или rating'
+        in: query
+        name: sort
+        type: string
+      - description: 'Направление сортировки: desc (по умолчанию) или asc'
+        in: query
+        name: order
+        type: string
+      - description: Количество записей (по умолчанию 50, максимум 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Смещение (по умолчанию 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/nexera_back_internal_models.PublicReview'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Список отзывов
+      tags:
+      - reviews
+    post:
+      consumes:
+      - application/json
+      description: Создает отзыв клиента с сайта. Отзыв публикуется только после модерации.
+        Телефон — в международном формате (+79991234567), пробелы/скобки/дефисы допускаются.
+        Оценка — от 1 до 5.
+      parameters:
+      - description: Данные отзыва
+        in: body
+        name: review
+        required: true
+        schema:
+          $ref: '#/definitions/nexera_back_internal_models.CreateReviewRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/nexera_back_internal_models.PublicReview'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Оставить отзыв
+      tags:
+      - reviews
+  /api/v1/reviews/summary:
+    get:
+      description: Возвращает количество одобренных отзывов и их среднюю оценку (округлена
+        до 0.1; 0, если отзывов нет) — для блока "4.8 из 5, 37 отзывов".
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/nexera_back_internal_models.ReviewSummary'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Сводка по отзывам
+      tags:
+      - reviews
+  /api/v1/services:
+    get:
+      description: Возвращает опубликованные услуги с фильтрацией по цене, сортировкой
+        и пагинацией. Услуги без цены ("по запросу") под ценовой фильтр не попадают,
+        а при сортировке по цене всегда идут в конце.
+      parameters:
+      - description: Цена не меньше (включительно)
+        in: query
+        name: price_from
+        type: integer
+      - description: Цена не больше (включительно)
+        in: query
+        name: price_to
+        type: integer
+      - description: 'Поле сортировки: position (по умолчанию), price, name или created_at'
+        in: query
+        name: sort
+        type: string
+      - description: 'Направление сортировки: asc (по умолчанию) или desc'
+        in: query
+        name: order
+        type: string
+      - description: Количество записей (по умолчанию 50, максимум 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Смещение (по умолчанию 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/nexera_back_internal_models.Service'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Список услуг
+      tags:
+      - services
+  /api/v1/services/{id}:
+    get:
+      description: Возвращает услугу по ID, если она опубликована
+      parameters:
+      - description: ID услуги
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/nexera_back_internal_models.Service'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Получить услугу
       tags:
       - services
   /health:
@@ -600,7 +2606,7 @@ paths:
         "503":
           description: Service Unavailable
           schema:
-            $ref: '#/definitions/internal_handlers.ErrorResponse'
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
       summary: Readiness check
       tags:
       - health

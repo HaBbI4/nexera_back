@@ -5,8 +5,8 @@
     ],
     "swagger": "2.0",
     "info": {
-        "description": "API для системы учета и записи автомобилей на детейлинг услуги.\nПозволяет управлять клиентами, автомобилями, услугами и заказами.",
-        "title": "Detailing CRM API",
+        "description": "API сайта-визитки: баннеры, страницы, услуги, FAQ, отзывы и заявки.\nАдмин-панель управляет контентом, модерирует отзывы и пользователями telegram-бота.",
+        "title": "Nexera Back API",
         "contact": {
             "name": "API Support",
             "email": "911gtrss@gmail.com"
@@ -17,17 +17,41 @@
         "version": "1.0"
     },
     "paths": {
-        "/api/v1/cars": {
+        "/api/v1/admin/banners": {
             "get": {
-                "description": "Возвращает список автомобилей с пагинацией",
+                "description": "Возвращает все баннеры, включая выключенные и находящиеся вне окна показа. Требует авторизации.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "cars"
+                    "admin-banners"
                 ],
-                "summary": "Список автомобилей",
+                "summary": "Список баннеров (админка)",
                 "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID страницы — вернуть баннеры только этой страницы",
+                        "name": "page_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "true — только включенные, false — только выключенные",
+                        "name": "is_active",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Поле сортировки: position (по умолчанию) или created_at",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Направление сортировки: asc (по умолчанию) или desc",
+                        "name": "order",
+                        "in": "query"
+                    },
                     {
                         "type": "integer",
                         "description": "Количество записей (по умолчанию 50, максимум 100)",
@@ -47,337 +71,32 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/my-blog_internal_models.Car"
+                                "$ref": "#/definitions/nexera_back_internal_models.Banner"
                             }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/internal_handlers.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/cars/{id}": {
-            "get": {
-                "description": "Возвращает автомобиль по ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cars"
-                ],
-                "summary": "Получить автомобиль",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "ID автомобиля",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/my-blog_internal_models.Car"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/internal_handlers.ErrorResponse"
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_handlers.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/internal_handlers.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/customers": {
-            "get": {
-                "description": "Возвращает список клиентов с пагинацией",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "customers"
-                ],
-                "summary": "Список клиентов",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Количество записей (по умолчанию 50, максимум 100)",
-                        "name": "limit",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Смещение (по умолчанию 0)",
-                        "name": "offset",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/my-blog_internal_models.Customer"
-                            }
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_handlers.ErrorResponse"
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
                         }
                     }
                 }
             },
             "post": {
-                "description": "Создает нового клиента",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "customers"
-                ],
-                "summary": "Создать клиента",
-                "parameters": [
-                    {
-                        "description": "Данные клиента",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/my-blog_internal_models.CreateCustomerRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/my-blog_internal_models.Customer"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/internal_handlers.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/internal_handlers.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/customers/{id}": {
-            "get": {
-                "description": "Возвращает клиента по ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "customers"
-                ],
-                "summary": "Получить клиента",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "ID клиента",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/my-blog_internal_models.Customer"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/internal_handlers.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/internal_handlers.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/internal_handlers.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/orders": {
-            "get": {
-                "description": "Возвращает список заказов с автомобилем, клиентом, услугами и медиа",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "orders"
-                ],
-                "summary": "Список заказов",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Количество записей (по умолчанию 50, максимум 100)",
-                        "name": "limit",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Смещение (по умолчанию 0)",
-                        "name": "offset",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/my-blog_internal_models.Order"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/internal_handlers.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "Создает заказ с услугами. В каждом item указывается либо service_id (существующая услуга), либо service_name (+ опционально service_description, service_is_active) для создания новой услуги на лету.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "orders"
-                ],
-                "summary": "Создать заказ",
-                "parameters": [
-                    {
-                        "description": "Данные заказа",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/my-blog_internal_models.CreateOrderRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/my-blog_internal_models.Order"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/internal_handlers.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/internal_handlers.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/orders/{id}": {
-            "get": {
-                "description": "Возвращает заказ по ID вместе с автомобилем, клиентом, услугами и медиа",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "orders"
-                ],
-                "summary": "Получить заказ",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "ID заказа",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/my-blog_internal_models.Order"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/internal_handlers.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/internal_handlers.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/internal_handlers.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/orders/{id}/media": {
-            "post": {
-                "description": "Загружает фото/видео к уже созданному заказу (до 10 файлов за запрос)",
+                "description": "Создает новый баннер. Картинка — либо файл (поле image), либо готовый URL (поле image_url). Требует авторизации.",
                 "consumes": [
                     "multipart/form-data"
                 ],
@@ -385,71 +104,423 @@
                     "application/json"
                 ],
                 "tags": [
-                    "orders"
+                    "admin-banners"
                 ],
-                "summary": "Добавить медиа к заказу",
+                "summary": "Создать баннер",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "ID заказа",
-                        "name": "id",
-                        "in": "path",
+                        "description": "ID страницы",
+                        "name": "page_id",
+                        "in": "formData",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "Этап съемки: before или after (по умолчанию before)",
-                        "name": "stage",
+                        "description": "Заголовок",
+                        "name": "title",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Подзаголовок",
+                        "name": "subtitle",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Описание",
+                        "name": "description",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Текст ссылки",
+                        "name": "link_title",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "URL ссылки",
+                        "name": "link_url",
                         "in": "formData"
                     },
                     {
                         "type": "file",
-                        "description": "Файлы (фото/видео)",
-                        "name": "files",
-                        "in": "formData",
-                        "required": true
+                        "description": "Файл изображения (альтернатива image_url)",
+                        "name": "image",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Готовый URL изображения (альтернатива файлу)",
+                        "name": "image_url",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Порядок показа",
+                        "name": "position",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Начало показа, RFC3339",
+                        "name": "starts_at",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Конец показа, RFC3339",
+                        "name": "ends_at",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Активен",
+                        "name": "is_active",
+                        "in": "formData"
                     }
                 ],
                 "responses": {
                     "201": {
                         "description": "Created",
                         "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.Banner"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "415": {
+                        "description": "Unsupported Media Type",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/banners/{id}": {
+            "get": {
+                "description": "Возвращает баннер по ID, включая выключенный и находящийся вне окна показа. Требует авторизации.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-banners"
+                ],
+                "summary": "Получить баннер (админка)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID баннера",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.Banner"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Удаляет баннер по ID. Требует авторизации.",
+                "tags": [
+                    "admin-banners"
+                ],
+                "summary": "Удалить баннер",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID баннера",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Частично обновляет баннер по ID. Требует авторизации.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-banners"
+                ],
+                "summary": "Обновить баннер",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID баннера",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID страницы",
+                        "name": "page_id",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Заголовок",
+                        "name": "title",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Подзаголовок",
+                        "name": "subtitle",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Описание",
+                        "name": "description",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Текст ссылки",
+                        "name": "link_title",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "URL ссылки",
+                        "name": "link_url",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Новый файл изображения (альтернатива image_url)",
+                        "name": "image",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Новый URL изображения (альтернатива файлу)",
+                        "name": "image_url",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Порядок показа",
+                        "name": "position",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Начало показа, RFC3339",
+                        "name": "starts_at",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Конец показа, RFC3339",
+                        "name": "ends_at",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Активен",
+                        "name": "is_active",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.Banner"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "415": {
+                        "description": "Unsupported Media Type",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/faq": {
+            "get": {
+                "description": "Возвращает все вопросы-ответы, включая неопубликованные. Требует авторизации.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-faq"
+                ],
+                "summary": "Список FAQ (админка)",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "description": "true — только опубликованные, false — только скрытые",
+                        "name": "is_published",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Поле сортировки: position (по умолчанию) или created_at",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Направление сортировки: asc (по умолчанию) или desc",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Количество записей (по умолчанию 50, максимум 100)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Смещение (по умолчанию 0)",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/my-blog_internal_models.OrderMedia"
+                                "$ref": "#/definitions/nexera_back_internal_models.FAQ"
                             }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/internal_handlers.ErrorResponse"
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_handlers.ErrorResponse"
-                        }
-                    },
-                    "415": {
-                        "description": "Unsupported Media Type",
-                        "schema": {
-                            "$ref": "#/definitions/internal_handlers.ErrorResponse"
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_handlers.ErrorResponse"
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
                         }
                     }
                 }
-            }
-        },
-        "/api/v1/services": {
+            },
             "post": {
-                "description": "Создает новую услугу в каталоге",
+                "description": "Создает новый вопрос-ответ. Требует авторизации.",
                 "consumes": [
                     "application/json"
                 ],
@@ -457,17 +528,17 @@
                     "application/json"
                 ],
                 "tags": [
-                    "services"
+                    "admin-faq"
                 ],
-                "summary": "Создать услугу",
+                "summary": "Создать FAQ",
                 "parameters": [
                     {
-                        "description": "Данные услуги",
-                        "name": "request",
+                        "description": "Данные FAQ",
+                        "name": "faq",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/my-blog_internal_models.CreateServiceRequest"
+                            "$ref": "#/definitions/nexera_back_internal_models.CreateFAQRequest"
                         }
                     }
                 ],
@@ -475,19 +546,2693 @@
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/my-blog_internal_models.Service"
+                            "$ref": "#/definitions/nexera_back_internal_models.FAQ"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/internal_handlers.ErrorResponse"
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_handlers.ErrorResponse"
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/faq/{id}": {
+            "get": {
+                "description": "Возвращает вопрос-ответ по ID, включая неопубликованный. Требует авторизации.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-faq"
+                ],
+                "summary": "Получить FAQ (админка)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID записи FAQ",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.FAQ"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Удаляет вопрос-ответ по ID. Требует авторизации.",
+                "tags": [
+                    "admin-faq"
+                ],
+                "summary": "Удалить FAQ",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID записи FAQ",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Частично обновляет вопрос-ответ по ID. Требует авторизации.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-faq"
+                ],
+                "summary": "Обновить FAQ",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID записи FAQ",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Поля для обновления",
+                        "name": "faq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.UpdateFAQRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.FAQ"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/leads": {
+            "get": {
+                "description": "Возвращает заявки клиентов (вместе с услугой, если она указана) с фильтрацией по услуге, источнику и периоду создания. Требует авторизации.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-leads"
+                ],
+                "summary": "Список заявок",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID услуги — вернуть только заявки на эту услугу",
+                        "name": "service_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Источник заявки (например contact_form)",
+                        "name": "source",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Создана не раньше, RFC3339",
+                        "name": "created_from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Создана не позже, RFC3339",
+                        "name": "created_to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Поле сортировки: created_at (по умолчанию) или name",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Направление сортировки: desc (по умолчанию) или asc",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Количество записей (по умолчанию 50, максимум 100)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Смещение (по умолчанию 0)",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/nexera_back_internal_models.Lead"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/leads/{id}": {
+            "get": {
+                "description": "Возвращает заявку клиента по ID вместе с услугой (service), если она указана и еще существует. Требует авторизации.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-leads"
+                ],
+                "summary": "Получить заявку",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID заявки",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.Lead"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Удаляет заявку клиента по ID. Требует авторизации.",
+                "tags": [
+                    "admin-leads"
+                ],
+                "summary": "Удалить заявку",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID заявки",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/pages": {
+            "post": {
+                "description": "Создает новую страницу. Требует авторизации.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-pages"
+                ],
+                "summary": "Создать страницу",
+                "parameters": [
+                    {
+                        "description": "Данные страницы",
+                        "name": "page",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.CreatePageRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.Page"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/pages/{id}": {
+            "delete": {
+                "description": "Удаляет страницу по ID вместе со всеми ее баннерами (ON DELETE CASCADE). Требует авторизации.",
+                "tags": [
+                    "admin-pages"
+                ],
+                "summary": "Удалить страницу",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID страницы",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Частично обновляет страницу по ID. Требует авторизации.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-pages"
+                ],
+                "summary": "Обновить страницу",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID страницы",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Поля для обновления",
+                        "name": "page",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.UpdatePageRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.Page"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/reviews": {
+            "get": {
+                "description": "Возвращает отзывы клиентов с контактными данными, включая неодобренные (очередь модерации — ?is_approved=false). Удаленные отзывы не возвращаются. Требует авторизации.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-reviews"
+                ],
+                "summary": "Список отзывов (админка)",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "description": "true — только одобренные, false — только ожидающие модерации",
+                        "name": "is_approved",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Оценка не ниже (1-5)",
+                        "name": "rating_min",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Создан не раньше, RFC3339",
+                        "name": "created_from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Создан не позже, RFC3339",
+                        "name": "created_to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Поле сортировки: created_at (по умолчанию) или rating",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Направление сортировки: desc (по умолчанию) или asc",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Количество записей (по умолчанию 50, максимум 100)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Смещение (по умолчанию 0)",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/nexera_back_internal_models.Review"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/reviews/{id}": {
+            "get": {
+                "description": "Возвращает отзыв по ID вместе с контактными данными клиента, включая неодобренный. Требует авторизации.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-reviews"
+                ],
+                "summary": "Получить отзыв (админка)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID отзыва",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.Review"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Удаляет отзыв по ID: он пропадает и с сайта, и из админки. Требует авторизации.",
+                "tags": [
+                    "admin-reviews"
+                ],
+                "summary": "Удалить отзыв",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID отзыва",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/reviews/{id}/approve": {
+            "post": {
+                "description": "Одобряет отзыв по ID — он появляется на сайте. Повторное одобрение не ошибка. Требует авторизации.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-reviews"
+                ],
+                "summary": "Одобрить отзыв",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID отзыва",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.Review"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/reviews/{id}/unapprove": {
+            "post": {
+                "description": "Снимает одобрение с отзыва по ID — он пропадает с сайта, но не удаляется. Для неодобренного отзыва не ошибка. Требует авторизации.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-reviews"
+                ],
+                "summary": "Снять одобрение с отзыва",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID отзыва",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.Review"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/roles": {
+            "get": {
+                "description": "Возвращает все роли пользователей админ-панели. Требует роли admin.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-roles"
+                ],
+                "summary": "Список ролей",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/nexera_back_internal_models.Role"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Создает новую роль. code — латиница в нижнем регистре, цифры и \"_\", начинается с буквы, 2–50 символов. Требует роли admin.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-roles"
+                ],
+                "summary": "Создать роль",
+                "parameters": [
+                    {
+                        "description": "Данные роли",
+                        "name": "role",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.CreateRoleRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.Role"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/roles/{id}": {
+            "get": {
+                "description": "Возвращает роль по ID. Требует роли admin.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-roles"
+                ],
+                "summary": "Получить роль",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID роли",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.Role"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Удаляет роль по ID. Роль, назначенную пользователям (в т.ч. удаленным), удалить нельзя. Требует роли admin.",
+                "tags": [
+                    "admin-roles"
+                ],
+                "summary": "Удалить роль",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID роли",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Частично обновляет роль по ID. Code роли admin менять нельзя. Требует роли admin.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-roles"
+                ],
+                "summary": "Обновить роль",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID роли",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Поля для обновления",
+                        "name": "role",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.UpdateRoleRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.Role"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/services": {
+            "get": {
+                "description": "Возвращает все услуги, включая неопубликованные. Требует авторизации.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-services"
+                ],
+                "summary": "Список услуг (админка)",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "description": "true — только опубликованные, false — только скрытые",
+                        "name": "is_published",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Цена не меньше (включительно)",
+                        "name": "price_from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Цена не больше (включительно)",
+                        "name": "price_to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Поле сортировки: position (по умолчанию), price, name или created_at",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Направление сортировки: asc (по умолчанию) или desc",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Количество записей (по умолчанию 50, максимум 100)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Смещение (по умолчанию 0)",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/nexera_back_internal_models.Service"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Создает новую услугу. Без price — \"цена по запросу\". Требует авторизации.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-services"
+                ],
+                "summary": "Создать услугу",
+                "parameters": [
+                    {
+                        "description": "Данные услуги",
+                        "name": "service",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.CreateServiceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.Service"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/services/{id}": {
+            "get": {
+                "description": "Возвращает услугу по ID, включая неопубликованную. Требует авторизации.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-services"
+                ],
+                "summary": "Получить услугу (админка)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID услуги",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.Service"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Удаляет услугу по ID. Заявки на нее остаются, но без ссылки на услугу. Требует авторизации.",
+                "tags": [
+                    "admin-services"
+                ],
+                "summary": "Удалить услугу",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID услуги",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Частично обновляет услугу по ID. Требует авторизации.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-services"
+                ],
+                "summary": "Обновить услугу",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID услуги",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Поля для обновления",
+                        "name": "service",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.UpdateServiceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.Service"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/telegram-users": {
+            "get": {
+                "description": "Возвращает всех пользователей бота, включая отключенных. Только для роли admin.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-telegram-users"
+                ],
+                "summary": "Список пользователей telegram-бота",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "description": "true — только активные, false — только отключенные",
+                        "name": "is_active",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Поле сортировки: created_at (по умолчанию) или name",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Направление сортировки: asc (по умолчанию) или desc",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Количество записей (по умолчанию 50, максимум 100)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Смещение (по умолчанию 0)",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/nexera_back_internal_models.TelegramUser"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Добавляет пользователя бота по chat_id. Без is_active создается активным. Только для роли admin.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-telegram-users"
+                ],
+                "summary": "Добавить пользователя telegram-бота",
+                "parameters": [
+                    {
+                        "description": "Данные пользователя бота",
+                        "name": "telegram_user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.CreateTelegramUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.TelegramUser"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/telegram-users/{id}": {
+            "get": {
+                "description": "Возвращает пользователя бота по ID. Только для роли admin.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-telegram-users"
+                ],
+                "summary": "Получить пользователя telegram-бота",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID пользователя бота",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.TelegramUser"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Удаляет пользователя бота по ID: он сразу теряет доступ к боту. Только для роли admin.",
+                "tags": [
+                    "admin-telegram-users"
+                ],
+                "summary": "Удалить пользователя telegram-бота",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID пользователя бота",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Частично обновляет пользователя бота по ID (например, is_active=false отключает доступ и уведомления). Только для роли admin.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-telegram-users"
+                ],
+                "summary": "Обновить пользователя telegram-бота",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID пользователя бота",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Поля для обновления",
+                        "name": "telegram_user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.UpdateTelegramUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.TelegramUser"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/users": {
+            "get": {
+                "description": "Возвращает пользователей админ-панели (без удаленных) с фильтрацией по роли и активности. Требует роли admin.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-users"
+                ],
+                "summary": "Список пользователей",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID роли — вернуть только пользователей с этой ролью",
+                        "name": "role_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "true — только активные, false — только отключенные",
+                        "name": "is_active",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Поле сортировки: created_at (по умолчанию), name или email",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Направление сортировки: asc (по умолчанию) или desc",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Количество записей (по умолчанию 50, максимум 100)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Смещение (по умолчанию 0)",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/nexera_back_internal_models.User"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Создает нового пользователя админ-панели. Пароль хранится только в виде bcrypt-хеша. Требует роли admin.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-users"
+                ],
+                "summary": "Создать пользователя",
+                "parameters": [
+                    {
+                        "description": "Данные пользователя",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.CreateUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.User"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/users/{id}": {
+            "get": {
+                "description": "Возвращает пользователя админ-панели по ID. Требует роли admin.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-users"
+                ],
+                "summary": "Получить пользователя",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID пользователя",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.User"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Мягко удаляет пользователя по ID. Удалить самого себя нельзя. Требует роли admin.",
+                "tags": [
+                    "admin-users"
+                ],
+                "summary": "Удалить пользователя",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID пользователя",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Частично обновляет пользователя по ID. Сменить роль самому себе нельзя. Требует роли admin.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-users"
+                ],
+                "summary": "Обновить пользователя",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID пользователя",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Поля для обновления",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.UpdateUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.User"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/banners": {
+            "get": {
+                "description": "Возвращает баннеры, видимые прямо сейчас (активные и в окне показа), с фильтрацией по странице и сортировкой",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "banners"
+                ],
+                "summary": "Список баннеров",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID страницы — вернуть баннеры только этой страницы",
+                        "name": "page_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Поле сортировки: position (по умолчанию) или created_at",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Направление сортировки: asc (по умолчанию) или desc",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Количество записей (по умолчанию 50, максимум 100)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Смещение (по умолчанию 0)",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/nexera_back_internal_models.Banner"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/banners/{id}": {
+            "get": {
+                "description": "Возвращает баннер по ID, если он активен и находится в окне показа",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "banners"
+                ],
+                "summary": "Получить баннер",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID баннера",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.Banner"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/faq": {
+            "get": {
+                "description": "Возвращает опубликованные вопросы-ответы с сортировкой и пагинацией",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "faq"
+                ],
+                "summary": "Список FAQ",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Поле сортировки: position (по умолчанию) или created_at",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Направление сортировки: asc (по умолчанию) или desc",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Количество записей (по умолчанию 50, максимум 100)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Смещение (по умолчанию 0)",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/nexera_back_internal_models.FAQ"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/faq/{id}": {
+            "get": {
+                "description": "Возвращает вопрос-ответ по ID, если он опубликован",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "faq"
+                ],
+                "summary": "Получить FAQ",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID записи FAQ",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.FAQ"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/leads": {
+            "post": {
+                "description": "Создает заявку клиента с сайта. Телефон — в международном формате (+79991234567), пробелы/скобки/дефисы допускаются. source по умолчанию — contact_form.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "leads"
+                ],
+                "summary": "Оставить заявку",
+                "parameters": [
+                    {
+                        "description": "Данные заявки",
+                        "name": "lead",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.CreateLeadRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.Lead"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "429": {
+                        "description": "Too Many Requests",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/pages": {
+            "get": {
+                "description": "Возвращает все страницы сайта (без баннеров)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "pages"
+                ],
+                "summary": "Список страниц",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/nexera_back_internal_models.Page"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/pages/{id}": {
+            "get": {
+                "description": "Возвращает страницу по ID вместе с баннерами (активными и в окне показа), отсортированными по позиции",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "pages"
+                ],
+                "summary": "Получить страницу",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID страницы",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.Page"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/reviews": {
+            "get": {
+                "description": "Возвращает одобренные отзывы клиентов (без контактных данных) с фильтрацией по минимальной оценке, сортировкой и пагинацией.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reviews"
+                ],
+                "summary": "Список отзывов",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Оценка не ниже (1-5)",
+                        "name": "rating_min",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Поле сортировки: created_at (по умолчанию) или rating",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Направление сортировки: desc (по умолчанию) или asc",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Количество записей (по умолчанию 50, максимум 100)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Смещение (по умолчанию 0)",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/nexera_back_internal_models.PublicReview"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Создает отзыв клиента с сайта. Отзыв публикуется только после модерации. Телефон — в международном формате (+79991234567), пробелы/скобки/дефисы допускаются. Оценка — от 1 до 5.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reviews"
+                ],
+                "summary": "Оставить отзыв",
+                "parameters": [
+                    {
+                        "description": "Данные отзыва",
+                        "name": "review",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.CreateReviewRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.PublicReview"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "429": {
+                        "description": "Too Many Requests",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/reviews/summary": {
+            "get": {
+                "description": "Возвращает количество одобренных отзывов и их среднюю оценку (округлена до 0.1; 0, если отзывов нет) — для блока \"4.8 из 5, 37 отзывов\".",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reviews"
+                ],
+                "summary": "Сводка по отзывам",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.ReviewSummary"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/services": {
+            "get": {
+                "description": "Возвращает опубликованные услуги с фильтрацией по цене, сортировкой и пагинацией. Услуги без цены (\"по запросу\") под ценовой фильтр не попадают, а при сортировке по цене всегда идут в конце.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "services"
+                ],
+                "summary": "Список услуг",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Цена не меньше (включительно)",
+                        "name": "price_from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Цена не больше (включительно)",
+                        "name": "price_to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Поле сортировки: position (по умолчанию), price, name или created_at",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Направление сортировки: asc (по умолчанию) или desc",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Количество записей (по умолчанию 50, максимум 100)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Смещение (по умолчанию 0)",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/nexera_back_internal_models.Service"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/services/{id}": {
+            "get": {
+                "description": "Возвращает услугу по ID, если она опубликована",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "services"
+                ],
+                "summary": "Получить услугу",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID услуги",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.Service"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
                         }
                     }
                 }
@@ -565,7 +3310,7 @@
                     "503": {
                         "description": "Service Unavailable",
                         "schema": {
-                            "$ref": "#/definitions/internal_handlers.ErrorResponse"
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
                         }
                     }
                 }
@@ -573,17 +3318,6 @@
         }
     },
     "definitions": {
-        "internal_handlers.ErrorResponse": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                },
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
         "internal_handlers.HealthResponse": {
             "type": "object",
             "properties": {
@@ -604,47 +3338,125 @@
                 }
             }
         },
-        "my-blog_internal_models.Car": {
+        "nexera_back_internal_httpresponse.ErrorResponse": {
             "type": "object",
             "properties": {
-                "brand": {
+                "error": {
                     "type": "string"
                 },
-                "comment": {
+                "message": {
                     "type": "string"
-                },
+                }
+            }
+        },
+        "nexera_back_internal_models.Banner": {
+            "type": "object",
+            "properties": {
                 "created_at": {
                     "type": "string"
                 },
-                "customer_id": {
-                    "type": "integer"
+                "description": {
+                    "type": "string"
+                },
+                "ends_at": {
+                    "type": "string"
                 },
                 "id": {
                     "type": "integer"
                 },
-                "license_plate": {
+                "image_url": {
                     "type": "string"
                 },
-                "model": {
+                "is_active": {
+                    "type": "boolean"
+                },
+                "link_title": {
+                    "type": "string"
+                },
+                "link_url": {
+                    "type": "string"
+                },
+                "page": {
+                    "$ref": "#/definitions/nexera_back_internal_models.Page"
+                },
+                "page_id": {
+                    "type": "integer"
+                },
+                "position": {
+                    "type": "integer"
+                },
+                "starts_at": {
+                    "type": "string"
+                },
+                "subtitle": {
+                    "type": "string"
+                },
+                "title": {
                     "type": "string"
                 },
                 "updated_at": {
                     "type": "string"
-                },
-                "vin": {
-                    "type": "string"
-                },
-                "year": {
-                    "type": "integer"
                 }
             }
         },
-        "my-blog_internal_models.CreateCustomerRequest": {
+        "nexera_back_internal_models.CreateFAQRequest": {
             "type": "object",
             "properties": {
-                "comment": {
+                "answer": {
                     "type": "string"
                 },
+                "is_published": {
+                    "type": "boolean"
+                },
+                "position": {
+                    "type": "integer"
+                },
+                "question": {
+                    "type": "string"
+                }
+            }
+        },
+        "nexera_back_internal_models.CreateLeadRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "service_id": {
+                    "type": "integer"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "website": {
+                    "description": "Website — honeypot: скрытое поле формы, человек его не видит и не заполняет.\nЗаполнено — запрос отправил бот (см. services.ErrSpamDetected). Должно быть пустым.",
+                    "type": "string"
+                }
+            }
+        },
+        "nexera_back_internal_models.CreatePageRequest": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string"
+                }
+            }
+        },
+        "nexera_back_internal_models.CreateReviewRequest": {
+            "type": "object",
+            "properties": {
                 "email": {
                     "type": "string"
                 },
@@ -653,66 +3465,55 @@
                 },
                 "phone": {
                     "type": "string"
+                },
+                "rating": {
+                    "type": "integer"
+                },
+                "text": {
+                    "type": "string"
+                },
+                "website": {
+                    "description": "Website — honeypot: скрытое поле формы, человек его не видит и не заполняет.\nЗаполнено — запрос отправил бот (см. services.ErrSpamDetected). Должно быть пустым.",
+                    "type": "string"
                 }
             }
         },
-        "my-blog_internal_models.CreateOrderItemRequest": {
+        "nexera_back_internal_models.CreateRoleRequest": {
             "type": "object",
             "properties": {
-                "comment": {
+                "code": {
                     "type": "string"
                 },
-                "price": {
-                    "type": "number"
-                },
-                "quantity": {
-                    "type": "integer"
-                },
-                "service_description": {
-                    "type": "string"
-                },
-                "service_id": {
-                    "type": "integer"
-                },
-                "service_is_active": {
-                    "type": "boolean"
-                },
-                "service_name": {
+                "name": {
                     "type": "string"
                 }
             }
         },
-        "my-blog_internal_models.CreateOrderRequest": {
-            "type": "object",
-            "properties": {
-                "car_id": {
-                    "type": "integer"
-                },
-                "comment": {
-                    "type": "string"
-                },
-                "customer_id": {
-                    "type": "integer"
-                },
-                "items": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/my-blog_internal_models.CreateOrderItemRequest"
-                    }
-                },
-                "scheduled_at": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                }
-            }
-        },
-        "my-blog_internal_models.CreateServiceRequest": {
+        "nexera_back_internal_models.CreateServiceRequest": {
             "type": "object",
             "properties": {
                 "description": {
                     "type": "string"
+                },
+                "is_published": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "position": {
+                    "type": "integer"
+                },
+                "price": {
+                    "type": "integer"
+                }
+            }
+        },
+        "nexera_back_internal_models.CreateTelegramUserRequest": {
+            "type": "object",
+            "properties": {
+                "chat_id": {
+                    "type": "integer"
                 },
                 "is_active": {
                     "type": "boolean"
@@ -722,12 +3523,52 @@
                 }
             }
         },
-        "my-blog_internal_models.Customer": {
+        "nexera_back_internal_models.CreateUserRequest": {
             "type": "object",
             "properties": {
-                "comment": {
+                "email": {
                     "type": "string"
                 },
+                "name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "role_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "nexera_back_internal_models.FAQ": {
+            "type": "object",
+            "properties": {
+                "answer": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_published": {
+                    "type": "boolean"
+                },
+                "position": {
+                    "type": "integer"
+                },
+                "question": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "nexera_back_internal_models.Lead": {
+            "type": "object",
+            "properties": {
                 "created_at": {
                     "type": "string"
                 },
@@ -737,156 +3578,140 @@
                 "id": {
                     "type": "integer"
                 },
+                "message": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
                 "phone": {
                     "type": "string"
                 },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "my-blog_internal_models.Order": {
-            "type": "object",
-            "properties": {
-                "car": {
-                    "$ref": "#/definitions/my-blog_internal_models.Car"
-                },
-                "car_id": {
-                    "type": "integer"
-                },
-                "comment": {
-                    "type": "string"
-                },
-                "completed_at": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "customer": {
-                    "$ref": "#/definitions/my-blog_internal_models.Customer"
-                },
-                "customer_id": {
-                    "type": "integer"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "items": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/my-blog_internal_models.OrderItem"
-                    }
-                },
-                "media": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/my-blog_internal_models.OrderMedia"
-                    }
-                },
-                "scheduled_at": {
-                    "type": "string"
-                },
-                "started_at": {
-                    "type": "string"
-                },
-                "status": {
-                    "$ref": "#/definitions/my-blog_internal_models.OrderStatus"
-                },
-                "total_amount": {
-                    "type": "number"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "my-blog_internal_models.OrderItem": {
-            "type": "object",
-            "properties": {
-                "comment": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "order_id": {
-                    "type": "integer"
-                },
-                "price": {
-                    "type": "number"
-                },
-                "quantity": {
-                    "type": "integer"
+                "service": {
+                    "$ref": "#/definitions/nexera_back_internal_models.Service"
                 },
                 "service_id": {
                     "type": "integer"
                 },
-                "service_name": {
+                "source": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }
         },
-        "my-blog_internal_models.OrderMedia": {
+        "nexera_back_internal_models.Page": {
             "type": "object",
             "properties": {
-                "comment": {
+                "banners": {
+                    "description": "Banners заполняется только при получении одной страницы по ID (см.\nPageService.GetPublicByIDWithBanners) — список баннеров, видимых прямо сейчас,\nотсортированных по Position. При List() всегда nil, в БД не хранится.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/nexera_back_internal_models.Banner"
+                    }
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string"
+                }
+            }
+        },
+        "nexera_back_internal_models.PublicReview": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "rating": {
+                    "type": "integer"
+                },
+                "text": {
+                    "type": "string"
+                }
+            }
+        },
+        "nexera_back_internal_models.Review": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_approved": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "rating": {
+                    "type": "integer"
+                },
+                "text": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "nexera_back_internal_models.ReviewSummary": {
+            "type": "object",
+            "properties": {
+                "average_rating": {
+                    "type": "number"
+                },
+                "count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "nexera_back_internal_models.Role": {
+            "type": "object",
+            "properties": {
+                "code": {
                     "type": "string"
                 },
                 "created_at": {
                     "type": "string"
                 },
-                "file_size": {
-                    "type": "integer"
-                },
                 "id": {
                     "type": "integer"
                 },
-                "mime_type": {
+                "name": {
                     "type": "string"
                 },
-                "order_id": {
-                    "type": "integer"
-                },
-                "stage": {
-                    "type": "string"
-                },
-                "storage_key": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                },
-                "url": {
-                    "description": "URL постоянная публичная ссылка на файл, вычисляется на лету из StorageKey\nтекущим драйвером хранилища и не хранится в БД.",
+                "updated_at": {
                     "type": "string"
                 }
             }
         },
-        "my-blog_internal_models.OrderStatus": {
-            "type": "string",
-            "enum": [
-                "created",
-                "scheduled",
-                "in_progress",
-                "completed",
-                "cancelled"
-            ],
-            "x-enum-varnames": [
-                "OrderStatusCreated",
-                "OrderStatusScheduled",
-                "OrderStatusInProgress",
-                "OrderStatusCompleted",
-                "OrderStatusCancelled"
-            ]
-        },
-        "my-blog_internal_models.Service": {
+        "nexera_back_internal_models.Service": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -898,11 +3723,168 @@
                 "id": {
                     "type": "integer"
                 },
+                "is_published": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "position": {
+                    "type": "integer"
+                },
+                "price": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "nexera_back_internal_models.TelegramUser": {
+            "type": "object",
+            "properties": {
+                "chat_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
                 "is_active": {
                     "type": "boolean"
                 },
                 "name": {
                     "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "nexera_back_internal_models.UpdateFAQRequest": {
+            "type": "object",
+            "properties": {
+                "answer": {
+                    "type": "string"
+                },
+                "is_published": {
+                    "type": "boolean"
+                },
+                "position": {
+                    "type": "integer"
+                },
+                "question": {
+                    "type": "string"
+                }
+            }
+        },
+        "nexera_back_internal_models.UpdatePageRequest": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string"
+                }
+            }
+        },
+        "nexera_back_internal_models.UpdateRoleRequest": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "nexera_back_internal_models.UpdateServiceRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "is_published": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "position": {
+                    "type": "integer"
+                },
+                "price": {
+                    "type": "integer"
+                }
+            }
+        },
+        "nexera_back_internal_models.UpdateTelegramUserRequest": {
+            "type": "object",
+            "properties": {
+                "chat_id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "nexera_back_internal_models.UpdateUserRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "role_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "nexera_back_internal_models.User": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "last_login_at": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "role": {
+                    "$ref": "#/definitions/nexera_back_internal_models.Role"
+                },
+                "role_id": {
+                    "type": "integer"
                 },
                 "updated_at": {
                     "type": "string"

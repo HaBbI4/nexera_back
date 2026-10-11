@@ -52,7 +52,7 @@ type RedisConfig struct {
 	DB       int    `json:"db"`
 }
 
-// MediaConfig конфигурация хранения медиа-файлов заказов (фото/видео)
+// MediaConfig конфигурация хранения загружаемых изображений (баннеры и т.п.)
 type MediaConfig struct {
 	// Driver выбирает бэкенд хранения: "local" или "s3"
 	Driver        string        `json:"driver"`
@@ -92,8 +92,8 @@ type KafkaConfig struct {
 
 // Topics топики Kafka, используемые в системе
 type Topics struct {
-	// Orders топик событий по заказам (создание, смена статуса)
-	Orders string `json:"orders"`
+	// Events топик доменных событий (новые заявки, отзывы) — читает telegram-bot
+	Events string `json:"events"`
 }
 
 // TelegramConfig конфигурация telegram-бота
@@ -181,9 +181,9 @@ func Load() *Config {
 		},
 		Kafka: KafkaConfig{
 			Brokers: strings.Split(getEnv("KAFKA_BROKERS", "localhost:9092"), ","),
-			GroupID: getEnv("KAFKA_GROUP_ID", "detailing-crm"),
+			GroupID: getEnv("KAFKA_GROUP_ID", "nexera-back"),
 			Topics: Topics{
-				Orders: getEnv("KAFKA_TOPIC_ORDERS", "orders"),
+				Events: getEnv("KAFKA_TOPIC_EVENTS", "events"),
 			},
 		},
 		Telegram: TelegramConfig{

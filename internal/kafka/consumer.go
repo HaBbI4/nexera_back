@@ -44,7 +44,7 @@ func NewConsumer(cfg *config.KafkaConfig, log *logger.Logger) (*Consumer, error)
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	topics := []string{cfg.Topics.Orders}
+	topics := []string{cfg.Topics.Events}
 
 	log.Info("Kafka consumer created successfully")
 

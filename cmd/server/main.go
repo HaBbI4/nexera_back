@@ -9,7 +9,6 @@ import (
 	"nexera_back/internal/handlers"
 	"nexera_back/internal/handlers/admin"
 	"nexera_back/internal/handlers/public"
-	"nexera_back/internal/kafka"
 	"nexera_back/internal/logger"
 	"nexera_back/internal/media"
 	"nexera_back/internal/middleware"
@@ -26,10 +25,10 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
-// @title           Detailing CRM API
+// @title           Nexera Back API
 // @version         1.0
-// @description     API для системы учета и записи автомобилей на детейлинг услуги.
-// @description     Позволяет управлять клиентами, автомобилями, услугами и заказами.
+// @description     API сайта-визитки: баннеры, страницы, услуги, FAQ, отзывы и заявки.
+// @description     Админ-панель управляет контентом, модерирует отзывы и пользователями telegram-бота.
 
 // @contact.name   API Support
 // @contact.email  911gtrss@gmail.com
@@ -75,18 +74,7 @@ func main() {
 		log.WithError(err).Fatal("Failed to initialize media storage")
 	}
 
-	// Kafka producer — публикует события о заказах (например, для telegram-bot)
-	kafkaProducer, err := kafka.NewProducer(&cfg.Kafka, log)
-	if err != nil {
-		log.WithError(err).Fatal("Failed to create Kafka producer")
-	}
-	defer kafkaProducer.Close()
-
 	// Инициализация сервисов
-	carService := services.NewCarService(db, log)
-	customerService := services.NewCustomerService(db, log)
-	orderService := services.NewOrderService(db, log, kafkaProducer)
-	orderMediaService := services.NewOrderMediaService(db, mediaStorage, log)
 	userRepo := repository.NewUserRepository(db)
 	userService := services.NewUserService(userRepo, log)
 	roleRepo := repository.NewRoleRepository(db)
@@ -108,9 +96,6 @@ func main() {
 
 	// Инициализация handlers
 	healthHandler := handlers.NewHealthHandler(db, redisClient)
-	carHandler := handlers.NewCarHandler(carService, redisClient, log)
-	customerHandler := handlers.NewCustomerHandler(customerService, redisClient, log)
-	orderHandler := handlers.NewOrderHandler(orderService, orderMediaService, redisClient, log, cfg.Media.MaxFileSizeMB)
 	jwtTTL := time.Duration(cfg.Auth.JWTTTLMinutes) * time.Minute
 	authHandler := admin.NewAuthHandler(userService, cfg.Auth.JWTSecret, jwtTTL, log)
 	bannerHandler := public.NewBannerHandler(bannerService, redisClient, log)
@@ -132,9 +117,6 @@ func main() {
 	// Настройки HTTP-роутера
 	mux := setupRoutes(
 		healthHandler,
-		carHandler,
-		customerHandler,
-		orderHandler,
 		authHandler,
 		bannerHandler,
 		adminBannerHandler,
@@ -197,15 +179,8 @@ func main() {
 //   - публичные /api/v1/*        — читает/создает любой клиент сайта, только CORS
 //   - админские /api/v1/admin/*  — требуют валидный JWT (middleware.RequireAuth),
 //     часть — еще и конкретную роль (middleware.RequireRole)
-//
-// Хендлеры car/customer/order ниже относятся к старому (детейлинг) домену
-// и доживают здесь временно — при переносе на баннеры/лиды/отзывы они переедут
-// в internal/handlers/public и internal/handlers/admin по тому же принципу, что auth.
 func setupRoutes(
 	healthHandler *handlers.HealthHandler,
-	carHandler *handlers.CarHandler,
-	customerHandler *handlers.CustomerHandler,
-	orderHandler *handlers.OrderHandler,
 	authHandler *admin.AuthHandler,
 	bannerHandler *public.BannerHandler,
 	adminBannerHandler *admin.BannerHandler,
@@ -339,21 +314,6 @@ func setupRoutes(
 	mux.HandleFunc("POST /api/v1/admin/telegram-users", middleware.Chain(adminTelegramUserHandler.CreateTelegramUser, logging, middleware.CORS, requireAuth, requireAdmin))
 	mux.HandleFunc("PATCH /api/v1/admin/telegram-users/{id}", middleware.Chain(adminTelegramUserHandler.UpdateTelegramUser, logging, middleware.CORS, requireAuth, requireAdmin))
 	mux.HandleFunc("DELETE /api/v1/admin/telegram-users/{id}", middleware.Chain(adminTelegramUserHandler.DeleteTelegramUser, logging, middleware.CORS, requireAuth, requireAdmin))
-
-	// Car's endpoints
-	mux.HandleFunc("GET /api/v1/cars", middleware.Chain(carHandler.GetCars, logging, middleware.CORS))
-	mux.HandleFunc("GET /api/v1/cars/{id}", middleware.Chain(carHandler.GetCar, logging, middleware.CORS))
-
-	// Customer's endpoints
-	mux.HandleFunc("GET /api/v1/customers", middleware.Chain(customerHandler.GetCustomers, logging, middleware.CORS))
-	mux.HandleFunc("GET /api/v1/customers/{id}", middleware.Chain(customerHandler.GetCustomer, logging, middleware.CORS))
-	mux.HandleFunc("POST /api/v1/customers", middleware.Chain(customerHandler.CreateCustomer, logging, middleware.CORS))
-
-	// Order's endpoints
-	mux.HandleFunc("GET /api/v1/orders", middleware.Chain(orderHandler.GetOrders, logging, middleware.CORS))
-	mux.HandleFunc("GET /api/v1/orders/{id}", middleware.Chain(orderHandler.GetOrder, logging, middleware.CORS))
-	mux.HandleFunc("POST /api/v1/orders", middleware.Chain(orderHandler.CreateOrder, logging, middleware.CORS))
-	mux.HandleFunc("POST /api/v1/orders/{id}/media", middleware.Chain(orderHandler.AddOrderMedia, logging, middleware.CORS))
 
 	// Раздача локально сохранённых медиа-файлов (используется при MEDIA_DRIVER=local)
 	mux.HandleFunc("GET /media/{path...}", middleware.Chain(handlers.NewLocalMediaHandler(localMediaPath), logging, middleware.CORS))

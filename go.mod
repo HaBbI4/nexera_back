@@ -16,6 +16,7 @@ require (
 	github.com/swaggo/http-swagger/v2 v2.0.2
 	github.com/swaggo/swag v1.16.6
 	golang.org/x/crypto v0.38.0
+	golang.org/x/term v0.32.0
 	gopkg.in/telebot.v3 v3.3.8
 )
 

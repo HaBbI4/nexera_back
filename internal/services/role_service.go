@@ -45,6 +45,11 @@ func (svc *RoleService) GetByID(id int) (*models.Role, error) {
 	return svc.repo.GetByID(id)
 }
 
+// GetByCode возвращает роль по коду (например, models.RoleCodeAdmin).
+func (svc *RoleService) GetByCode(code string) (*models.Role, error) {
+	return svc.repo.GetByCode(code)
+}
+
 // Create создает новую роль.
 func (svc *RoleService) Create(req models.CreateRoleRequest) (*models.Role, error) {
 	role := &models.Role{

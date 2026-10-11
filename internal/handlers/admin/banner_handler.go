@@ -587,8 +587,6 @@ func (h *BannerHandler) writeBannerError(w http.ResponseWriter, err error) {
 	switch {
 	case errors.Is(err, services.ErrInvalidBanner):
 		httpresponse.WriteError(w, http.StatusBadRequest, err.Error())
-	case errors.Is(err, media.ErrNotAnImage):
-		httpresponse.WriteError(w, http.StatusBadRequest, err.Error())
 	case errors.As(err, &unsupportedFormat):
 		httpresponse.WriteError(w, http.StatusUnsupportedMediaType, err.Error())
 	case errors.Is(err, repository.ErrBannerNotFound):

@@ -10,7 +10,6 @@ import (
 	"nexera_back/internal/models"
 
 	"github.com/IBM/sarama"
-	"github.com/google/uuid"
 )
 
 // Producer представляет Kafka producer
@@ -47,53 +46,10 @@ func (p *Producer) Close() error {
 	return p.producer.Close()
 }
 
-// PublishOrderCreated публикует событие создания заказа
-func (p *Producer) PublishOrderCreated(order *models.Order) error {
-	var customerName, carBrand, carModel string
-	if order.Customer != nil {
-		customerName = order.Customer.Name
-	}
-	if order.Car != nil {
-		carBrand = order.Car.Brand
-		carModel = order.Car.Model
-	}
+// Publish публикует событие в топик событий (KAFKA_TOPIC_EVENTS).
+func (p *Producer) Publish(event models.Event) error {
+	topic := p.topics.Events
 
-	event := models.Event{
-		ID:        uuid.New(),
-		Type:      models.EventTypeOrderCreated,
-		Timestamp: time.Now(),
-		Data: models.OrderCreatedEvent{
-			OrderID:      order.ID,
-			CustomerName: customerName,
-			CarBrand:     carBrand,
-			CarModel:     carModel,
-			TotalAmount:  order.TotalAmount,
-			CreatedAt:    order.CreatedAt,
-		},
-	}
-
-	return p.publishEvent(p.topics.Orders, event)
-}
-
-// PublishOrderStatusChanged публикует событие изменения статуса заказа
-func (p *Producer) PublishOrderStatusChanged(orderID int, oldStatus, newStatus models.OrderStatus) error {
-	event := models.Event{
-		ID:        uuid.New(),
-		Type:      models.EventTypeOrderStatusChanged,
-		Timestamp: time.Now(),
-		Data: models.OrderStatusChangedEvent{
-			OrderID:   orderID,
-			OldStatus: oldStatus,
-			NewStatus: newStatus,
-			Timestamp: time.Now(),
-		},
-	}
-
-	return p.publishEvent(p.topics.Orders, event)
-}
-
-// publishEvent публикует событие в указанный топик
-func (p *Producer) publishEvent(topic string, event models.Event) error {
 	data, err := json.Marshal(event)
 	if err != nil {
 		return fmt.Errorf("failed to marshal event: %w", err)
