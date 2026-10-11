@@ -76,50 +76,134 @@ Kafka (`internal/kafka`) и Redis (`internal/redis`) подключаются к
 
 ## 🚀 Быстрый старт
 
-### 1. Поднять инфраструктуру (Postgres, Redis) и накатить миграции
+Два режима запуска:
+
+- **Полный стек в Docker** (`app` + `telegram-bot` + postgres + redis + kafka). Ближе к продакшену, подходит для ручного тестирования API.
+- **Локальная разработка.** В Docker только postgres и redis, сервер запускается из исходников через `go run`.
+
+### Полный стек в Docker
+
+#### 0. Что нужно заранее
+
+- Запущенный Docker Desktop.
+- Свободные порты 8080, 5433, 6379, 9092, 29092 и 2181.
+- `jq` по желанию, для удобного вывода JSON: `brew install jq`.
+
+#### 1. Подготовить `.env`
 
 ```bash
-make dev-up
-make migrate-up
+cp .env.example .env      # если .env еще нет
+openssl rand -hex 32      # сгенерировать значение для JWT_SECRET
 ```
 
-### 2. Создать администратора
+- **`JWT_SECRET`** обязателен. Без него `docker compose up` откажет еще на этапе интерполяции.
+- **`TELEGRAM_BOT_TOKEN`.** Чтобы проверить бота, получите токен у [@BotFather](https://t.me/BotFather) (`/newbot`). Без валидного токена контейнер `telegram-bot` будет падать и перезапускаться по кругу, поэтому без бота стек поднимайте командой из шага 2.
 
-Роль `admin` создается миграцией `010_seed_admin_role`, самого пользователя — CLI-командой (аналог `php artisan`, исходники в `cmd/cli`):
+`docker-compose.yml` не хранит секреты: `DB_USER`/`DB_PASSWORD`/`DB_NAME` и `JWT_SECRET` подставляются во все сервисы (`postgres`, `migrate`, `app`, `telegram-bot`) из `.env` через интерполяцию (`${DB_USER:-nexera_back_user}` и т.п.). У `JWT_SECRET` нет дефолта специально: раньше без него `app` уходил в бесконечный рестарт-луп (`restart: always` + `log.Fatal` при пустом `JWT_SECRET`). Остальные настройки `app` (хосты БД/Redis/Kafka внутри docker-сети, лимиты и т.п.) заданы в compose-файле.
+
+#### 2. Поднять стек
 
 ```bash
-make create-admin email=admin@example.com name="Администратор"
-# пароль спрашивается в терминале; без терминала — через ADMIN_PASSWORD
+make up                              # всё, включая telegram-bot (нужен TELEGRAM_BOT_TOKEN)
+docker compose up -d --build app     # без бота: app и его зависимости
 ```
 
-В Docker: `docker compose run --rm app ./nexera_back-cli create-admin --email admin@example.com`. Пароль в `.env` не храним: команда запускается один раз, дальше пароль меняется через админку.
+- **Миграции применяются автоматически.** Сервис `migrate` выполняет `migrations/` до старта `app`, включая `010_seed_admin_role`, которая создает роль `admin`.
+- **Kafka сервер пока не использует**, но она указана в `depends_on`. Поэтому первый старт занимает 1–2 минуты, пока Kafka не станет healthy.
 
-### 3. Запустить сервер локально
+#### 3. Проверить, что всё поднялось
 
 ```bash
-make run
-# или напрямую: go run cmd/server/main.go
+docker compose ps                    # app — Up (healthy), migrate — Exited (0)
+docker compose logs migrate          # последняя применённая миграция — 10/u seed_admin_role
+curl -s localhost:8080/health | jq   # статус всех компонентов
+docker compose logs -f app           # если app не стартует
 ```
 
-Обязательно должен быть задан `JWT_SECRET` в `.env` — без него сервер не стартует (см. `.env.example`).
+#### 4. Создать администратора
 
-### 4. Проверка работоспособности
+Роль `admin` создает миграция, а пользователя — CLI-команда (аналог `php artisan`, исходники в `cmd/cli`). Пароль команда спрашивает в терминале дважды (минимум 8 символов). Для неинтерактивного запуска пароль передается через `ADMIN_PASSWORD`.
 
 ```bash
-make health
-# или: curl http://localhost:8080/health
+# внутри запущенного контейнера
+docker compose exec app ./nexera_back-cli create-admin --email admin@example.com --name "Админ"
+
+# или с хоста: .env смотрит на Postgres из Docker (localhost:5433)
+make create-admin email=admin@example.com name="Админ"
 ```
 
-### 5. Полный стек в Docker (app + telegram-bot + postgres + redis + kafka)
+Пароль в `.env` не храним: команда запускается один раз, дальше пароль меняется через админку.
+
+#### 5. Залогиниться и получить JWT
 
 ```bash
-make up
-make logs
+TOKEN=$(curl -s -X POST localhost:8080/api/v1/admin/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"admin@example.com","password":"ВАШ_ПАРОЛЬ"}' | jq -r .token)
+
+curl -s localhost:8080/api/v1/admin/auth/me -H "Authorization: Bearer $TOKEN" | jq
 ```
 
-`docker-compose.yml` не хранит секреты захардкоженными — `DB_USER`/`DB_PASSWORD`/`DB_NAME` и `JWT_SECRET` подставляются во все сервисы (`postgres`, `migrate`, `app`, `telegram-bot`) из `.env` через интерполяцию (`${DB_USER:-nexera_back_user}` и т.п.), а не прописаны в compose-файле напрямую. `JWT_SECRET` обязателен без дефолта: если он не задан в `.env`, `docker compose up` откажет ещё на этапе интерполяции с понятным сообщением — раньше без него `app` уходил в бесконечный рестарт-луп (`restart: always` + `log.Fatal` при пустом `JWT_SECRET`).
+- **Все `/api/v1/admin/*`** требуют заголовок `Authorization: Bearer $TOKEN`. В Postman это вкладка Authorization, тип Bearer Token.
+- **Время жизни токена** задает `JWT_TTL_MINUTES`, по умолчанию 24 часа.
 
-**Важно:** в Docker-образе лежит только скомпилированный бинарник (multi-stage build, финальный слой — `alpine` без исходников и без hot-reload тулов). Правки в коде **не применяются** к уже запущенному контейнеру — ни простой `docker compose restart app`, ничего: нужно пересобрать образ (`docker compose up -d --build app`). Для активной разработки используйте `make dev-up` (только postgres+redis в Docker) + `make run` (сервер из исходников на хосте, `go run` подхватывает правки при каждом перезапуске) — `make up` поднимает весь стек целиком, это ближе к прод-подобному прогону, а не к циклу разработки.
+#### 6. Что тестировать
+
+- **Swagger UI:** http://localhost:8080/swagger/index.html, там все эндпоинты и форматы запросов. Авторизация по Bearer в Swagger пока не настроена, поэтому админские запросы отправляйте через curl или Postman.
+- **Публичные эндпоинты (без токена):**
+  - `GET /api/v1/banners`, `/pages`, `/services`, `/faq`.
+  - `POST /api/v1/leads` и `/api/v1/reviews` с защитой от спама (см. «Защита публичных форм от спама»). Например, 6-я заявка с одного IP за 10 минут получит `429`.
+- **Админские эндпоинты:**
+  - CRUD баннеров, страниц, услуг, FAQ;
+  - просмотр лидов и модерация отзывов;
+  - только для роли `admin`: пользователи, роли, `telegram-users`.
+- **Загрузка изображений баннеров.** Файл передается полем `image` в multipart-запросе:
+  ```bash
+  curl -s -X POST localhost:8080/api/v1/admin/banners -H "Authorization: Bearer $TOKEN" \
+    -F page_id=1 -F title="Тест" -F image=@/путь/к/картинке.jpg | jq
+  ```
+  - В ответе `image_url` — относительный путь вида `/media/banners/<файл>.jpg`, картинка открывается по `http://localhost:8080` + `image_url`.
+  - Файлы лежат в томе `app-uploads`: `docker compose exec app ls /app/uploads/banners`.
+  - Полная ссылка вместо относительной включается через `MEDIA_LOCAL_PUBLIC_BASE_URL`.
+
+#### 7. Проверить telegram-бота (если запущен с токеном)
+
+1. Узнать свой chat_id: написать [@userinfobot](https://t.me/userinfobot).
+2. Добавить себя в бота:
+   ```bash
+   curl -s -X POST localhost:8080/api/v1/admin/telegram-users \
+     -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+     -d '{"chat_id": 123456789, "name": "Я"}' | jq
+   ```
+3. Написать боту `/start`, он ответит приветствием. Если записи нет или у нее `is_active=false`, доступ запрещен. Уведомлений о заявках пока нет (см. примечание про outbox выше).
+
+#### 8. Полезные команды
+
+```bash
+make logs                                  # логи всех сервисов
+docker compose logs -f app                 # только API
+docker compose up -d --build app           # пересобрать после правок кода
+docker compose exec postgres psql -U nexera_back_user -d nexera_back_db   # консоль БД
+make down                                  # остановить стек
+docker compose down -v                     # остановить и удалить все данные (БД, загрузки)
+```
+
+После `down -v` база пустая: при следующем `up` миграции применятся заново, а администратора нужно создать снова (шаг 4).
+
+**Важно:** в Docker-образе лежат только скомпилированные бинарники: multi-stage build, финальный слой — `alpine` без исходников и без hot-reload тулов. Правки в коде **не применяются** к уже запущенному контейнеру, `docker compose restart app` тоже не поможет — нужно пересобрать образ: `docker compose up -d --build app`.
+
+### Локальная разработка
+
+```bash
+make dev-up                                       # postgres + redis в Docker
+make migrate-up                                   # нужен CLI golang-migrate: brew install golang-migrate
+make create-admin email=admin@example.com         # один раз
+make run                                          # сервер из исходников на :8080
+make health                                       # или: curl http://localhost:8080/health
+```
+
+- **`make run` и `make create-admin`** подгружают переменные из `.env`, сам сервер `.env` не читает. Если запускаете напрямую через `go run cmd/server/main.go`, переменные нужно экспортировать самому.
+- **`go run` подхватывает правки** при каждом перезапуске, поэтому этот режим удобнее для цикла разработки, чем пересборка образа.
 
 ## 📊 Мониторинг
 

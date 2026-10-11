@@ -11,9 +11,10 @@ build:
 	@echo "Building $(BINARY_NAME)..."
 	@go build -o $(BINARY_NAME) cmd/server/main.go
 
-# Запуск приложения
+# Запуск приложения с переменными из .env (сам сервер .env не читает)
 run:
-	@go run cmd/server/main.go
+	@set -a; . ./.env; set +a; \
+	go run cmd/server/main.go
 
 # Генерация Swagger/OpenAPI документации из аннотаций в коде.
 # После изменения @Summary/@Param/@Router в internal/handlers обязательно запускать заново.
