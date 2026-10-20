@@ -2,8 +2,8 @@
 
 Backend сайта-визитки IT-компании: баннеры, услуги, FAQ, контакты, отзывы, заявки (лиды), JWT-админка, Telegram-бот (в разработке).
 
-Публичный маркетинговый сайт вынесен в отдельный проект: **`nexera_front`**
-(`c:\Users\X\Desktop\Road to Programming\nexera\nexera_front`, GitHub: создать `HaBbI4/nexera_front` при необходимости).
+Публичный маркетинговый сайт вынесен в отдельный проект: **[`nexera_front`](https://github.com/gama1726/nexera_front)**
+(локально: `../nexera_front`).
 
 ## Быстрый старт
 

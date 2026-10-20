@@ -52,6 +52,52 @@ definitions:
       updated_at:
         type: string
     type: object
+  nexera_back_internal_models.ContactInfo:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      is_published:
+        type: boolean
+      label:
+        type: string
+      position:
+        type: integer
+      type:
+        $ref: '#/definitions/nexera_back_internal_models.ContactInfoType'
+      updated_at:
+        type: string
+      value:
+        type: string
+    type: object
+  nexera_back_internal_models.ContactInfoType:
+    enum:
+    - phone
+    - email
+    - telegram
+    - whatsapp
+    - vk
+    type: string
+    x-enum-varnames:
+    - ContactInfoTypePhone
+    - ContactInfoTypeEmail
+    - ContactInfoTypeTelegram
+    - ContactInfoTypeWhatsapp
+    - ContactInfoTypeVK
+  nexera_back_internal_models.CreateContactInfoRequest:
+    properties:
+      is_published:
+        type: boolean
+      label:
+        type: string
+      position:
+        type: integer
+      type:
+        $ref: '#/definitions/nexera_back_internal_models.ContactInfoType'
+      value:
+        type: string
+    type: object
   nexera_back_internal_models.CreateFAQRequest:
     properties:
       answer:
@@ -295,6 +341,19 @@ definitions:
       name:
         type: string
       updated_at:
+        type: string
+    type: object
+  nexera_back_internal_models.UpdateContactInfoRequest:
+    properties:
+      is_published:
+        type: boolean
+      label:
+        type: string
+      position:
+        type: integer
+      type:
+        $ref: '#/definitions/nexera_back_internal_models.ContactInfoType'
+      value:
         type: string
     type: object
   nexera_back_internal_models.UpdateFAQRequest:
@@ -681,6 +740,196 @@ paths:
       summary: Обновить баннер
       tags:
       - admin-banners
+  /api/v1/admin/contact-info:
+    get:
+      description: Возвращает все контактные записи, включая неопубликованные. Требует
+        авторизации.
+      parameters:
+      - description: true — только опубликованные, false — только скрытые
+        in: query
+        name: is_published
+        type: boolean
+      - description: 'Поле сортировки: position (по умолчанию) или created_at'
+        in: query
+        name: sort
+        type: string
+      - description: 'Направление сортировки: asc (по умолчанию) или desc'
+        in: query
+        name: order
+        type: string
+      - description: Количество записей (по умолчанию 50, максимум 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Смещение (по умолчанию 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/nexera_back_internal_models.ContactInfo'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Список контактов (админка)
+      tags:
+      - admin-contact-info
+    post:
+      consumes:
+      - application/json
+      description: Создает новую контактную запись. Требует авторизации.
+      parameters:
+      - description: Данные контакта
+        in: body
+        name: contact
+        required: true
+        schema:
+          $ref: '#/definitions/nexera_back_internal_models.CreateContactInfoRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/nexera_back_internal_models.ContactInfo'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Создать контакт
+      tags:
+      - admin-contact-info
+  /api/v1/admin/contact-info/{id}:
+    delete:
+      description: Удаляет контактную запись по ID. Требует авторизации.
+      parameters:
+      - description: ID контактной записи
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Удалить контакт
+      tags:
+      - admin-contact-info
+    get:
+      description: Возвращает контактную запись по ID, включая неопубликованную. Требует
+        авторизации.
+      parameters:
+      - description: ID контактной записи
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/nexera_back_internal_models.ContactInfo'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Получить контакт (админка)
+      tags:
+      - admin-contact-info
+    patch:
+      consumes:
+      - application/json
+      description: Частично обновляет контактную запись по ID. Требует авторизации.
+      parameters:
+      - description: ID контактной записи
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Поля для обновления
+        in: body
+        name: contact
+        required: true
+        schema:
+          $ref: '#/definitions/nexera_back_internal_models.UpdateContactInfoRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/nexera_back_internal_models.ContactInfo'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Обновить контакт
+      tags:
+      - admin-contact-info
   /api/v1/admin/faq:
     get:
       description: Возвращает все вопросы-ответы, включая неопубликованные. Требует
@@ -2222,6 +2471,77 @@ paths:
       summary: Получить баннер
       tags:
       - banners
+  /api/v1/contact-info:
+    get:
+      description: Возвращает опубликованные контактные данные с сортировкой и пагинацией
+      parameters:
+      - description: 'Поле сортировки: position (по умолчанию) или created_at'
+        in: query
+        name: sort
+        type: string
+      - description: 'Направление сортировки: asc (по умолчанию) или desc'
+        in: query
+        name: order
+        type: string
+      - description: Количество записей (по умолчанию 50, максимум 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Смещение (по умолчанию 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/nexera_back_internal_models.ContactInfo'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Список контактов
+      tags:
+      - contact-info
+  /api/v1/contact-info/{id}:
+    get:
+      description: Возвращает контактную запись по ID, если она опубликована
+      parameters:
+      - description: ID контактной записи
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/nexera_back_internal_models.ContactInfo'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/nexera_back_internal_httpresponse.ErrorResponse'
+      summary: Получить контакт
+      tags:
+      - contact-info
   /api/v1/faq:
     get:
       description: Возвращает опубликованные вопросы-ответы с сортировкой и пагинацией
