@@ -451,6 +451,290 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/admin/contact-info": {
+            "get": {
+                "description": "Возвращает все контактные записи, включая неопубликованные. Требует авторизации.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-contact-info"
+                ],
+                "summary": "Список контактов (админка)",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "description": "true — только опубликованные, false — только скрытые",
+                        "name": "is_published",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Поле сортировки: position (по умолчанию) или created_at",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Направление сортировки: asc (по умолчанию) или desc",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Количество записей (по умолчанию 50, максимум 100)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Смещение (по умолчанию 0)",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/nexera_back_internal_models.ContactInfo"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Создает новую контактную запись. Требует авторизации.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-contact-info"
+                ],
+                "summary": "Создать контакт",
+                "parameters": [
+                    {
+                        "description": "Данные контакта",
+                        "name": "contact",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.CreateContactInfoRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.ContactInfo"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/contact-info/{id}": {
+            "get": {
+                "description": "Возвращает контактную запись по ID, включая неопубликованную. Требует авторизации.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-contact-info"
+                ],
+                "summary": "Получить контакт (админка)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID контактной записи",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.ContactInfo"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Удаляет контактную запись по ID. Требует авторизации.",
+                "tags": [
+                    "admin-contact-info"
+                ],
+                "summary": "Удалить контакт",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID контактной записи",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Частично обновляет контактную запись по ID. Требует авторизации.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-contact-info"
+                ],
+                "summary": "Обновить контакт",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID контактной записи",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Поля для обновления",
+                        "name": "contact",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.UpdateContactInfoRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.ContactInfo"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/faq": {
             "get": {
                 "description": "Возвращает все вопросы-ответы, включая неопубликованные. Требует авторизации.",
@@ -2743,6 +3027,114 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/contact-info": {
+            "get": {
+                "description": "Возвращает опубликованные контактные данные с сортировкой и пагинацией",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contact-info"
+                ],
+                "summary": "Список контактов",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Поле сортировки: position (по умолчанию) или created_at",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Направление сортировки: asc (по умолчанию) или desc",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Количество записей (по умолчанию 50, максимум 100)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Смещение (по умолчанию 0)",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/nexera_back_internal_models.ContactInfo"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/contact-info/{id}": {
+            "get": {
+                "description": "Возвращает контактную запись по ID, если она опубликована",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contact-info"
+                ],
+                "summary": "Получить контакт",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID контактной записи",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_models.ContactInfo"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/nexera_back_internal_httpresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/faq": {
             "get": {
                 "description": "Возвращает опубликованные вопросы-ответы с сортировкой и пагинацией",
@@ -3403,6 +3795,72 @@ const docTemplate = `{
                 }
             }
         },
+        "nexera_back_internal_models.ContactInfo": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_published": {
+                    "type": "boolean"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "position": {
+                    "type": "integer"
+                },
+                "type": {
+                    "$ref": "#/definitions/nexera_back_internal_models.ContactInfoType"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "nexera_back_internal_models.ContactInfoType": {
+            "type": "string",
+            "enum": [
+                "phone",
+                "email",
+                "telegram",
+                "whatsapp",
+                "vk"
+            ],
+            "x-enum-varnames": [
+                "ContactInfoTypePhone",
+                "ContactInfoTypeEmail",
+                "ContactInfoTypeTelegram",
+                "ContactInfoTypeWhatsapp",
+                "ContactInfoTypeVK"
+            ]
+        },
+        "nexera_back_internal_models.CreateContactInfoRequest": {
+            "type": "object",
+            "properties": {
+                "is_published": {
+                    "type": "boolean"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "position": {
+                    "type": "integer"
+                },
+                "type": {
+                    "$ref": "#/definitions/nexera_back_internal_models.ContactInfoType"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
         "nexera_back_internal_models.CreateFAQRequest": {
             "type": "object",
             "properties": {
@@ -3763,6 +4221,26 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "nexera_back_internal_models.UpdateContactInfoRequest": {
+            "type": "object",
+            "properties": {
+                "is_published": {
+                    "type": "boolean"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "position": {
+                    "type": "integer"
+                },
+                "type": {
+                    "$ref": "#/definitions/nexera_back_internal_models.ContactInfoType"
+                },
+                "value": {
                     "type": "string"
                 }
             }

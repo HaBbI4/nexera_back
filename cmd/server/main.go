@@ -48,6 +48,10 @@ func main() {
 		log.Fatal("JWT_SECRET is required")
 	}
 
+	// CORS для отдельного фронтенда (nexera_front): localhost:3000 + CORS_ALLOWED_ORIGINS.
+	middleware.InitCORS(cfg.Server.CORSAllowedOrigins)
+	log.WithField("cors_origins", cfg.Server.CORSAllowedOrigins).Info("CORS allowed origins configured")
+
 	// Подключение к базе данных
 	db, err := database.Connect(&cfg.Database, log)
 	if err != nil {
@@ -81,6 +85,8 @@ func main() {
 	roleService := services.NewRoleService(roleRepo, log)
 	faqRepo := repository.NewFAQRepository(db)
 	faqService := services.NewFAQService(faqRepo, log)
+	contactInfoRepo := repository.NewContactInfoRepository(db)
+	contactInfoService := services.NewContactInfoService(contactInfoRepo, log)
 	leadRepo := repository.NewLeadRepository(db)
 	leadService := services.NewLeadService(leadRepo, time.Duration(cfg.Spam.LeadDuplicateWindowMinutes)*time.Minute, log)
 	serviceRepo := repository.NewServiceRepository(db)
@@ -106,6 +112,8 @@ func main() {
 	adminRoleHandler := admin.NewRoleHandler(roleService, log)
 	faqHandler := public.NewFAQHandler(faqService, redisClient, log)
 	adminFAQHandler := admin.NewFAQHandler(faqService, redisClient, log)
+	contactInfoHandler := public.NewContactInfoHandler(contactInfoService, redisClient, log)
+	adminContactInfoHandler := admin.NewContactInfoHandler(contactInfoService, redisClient, log)
 	leadHandler := public.NewLeadHandler(leadService, log)
 	adminLeadHandler := admin.NewLeadHandler(leadService, log)
 	serviceHandler := public.NewServiceHandler(serviceService, redisClient, log)
@@ -126,6 +134,8 @@ func main() {
 		adminRoleHandler,
 		faqHandler,
 		adminFAQHandler,
+		contactInfoHandler,
+		adminContactInfoHandler,
 		leadHandler,
 		adminLeadHandler,
 		serviceHandler,
@@ -190,6 +200,8 @@ func setupRoutes(
 	adminRoleHandler *admin.RoleHandler,
 	faqHandler *public.FAQHandler,
 	adminFAQHandler *admin.FAQHandler,
+	contactInfoHandler *public.ContactInfoHandler,
+	adminContactInfoHandler *admin.ContactInfoHandler,
 	leadHandler *public.LeadHandler,
 	adminLeadHandler *admin.LeadHandler,
 	serviceHandler *public.ServiceHandler,
@@ -261,6 +273,17 @@ func setupRoutes(
 	mux.HandleFunc("POST /api/v1/admin/faq", middleware.Chain(adminFAQHandler.CreateFAQ, logging, middleware.CORS, requireAuth))
 	mux.HandleFunc("PATCH /api/v1/admin/faq/{id}", middleware.Chain(adminFAQHandler.UpdateFAQ, logging, middleware.CORS, requireAuth))
 	mux.HandleFunc("DELETE /api/v1/admin/faq/{id}", middleware.Chain(adminFAQHandler.DeleteFAQ, logging, middleware.CORS, requireAuth))
+
+	// Contact info endpoints (публичные, без авторизации)
+	mux.HandleFunc("GET /api/v1/contact-info", middleware.Chain(contactInfoHandler.GetContactInfos, logging, middleware.CORS))
+	mux.HandleFunc("GET /api/v1/contact-info/{id}", middleware.Chain(contactInfoHandler.GetContactInfo, logging, middleware.CORS))
+
+	// Contact info admin endpoints (требуют авторизации)
+	mux.HandleFunc("GET /api/v1/admin/contact-info", middleware.Chain(adminContactInfoHandler.GetContactInfos, logging, middleware.CORS, requireAuth))
+	mux.HandleFunc("GET /api/v1/admin/contact-info/{id}", middleware.Chain(adminContactInfoHandler.GetContactInfo, logging, middleware.CORS, requireAuth))
+	mux.HandleFunc("POST /api/v1/admin/contact-info", middleware.Chain(adminContactInfoHandler.CreateContactInfo, logging, middleware.CORS, requireAuth))
+	mux.HandleFunc("PATCH /api/v1/admin/contact-info/{id}", middleware.Chain(adminContactInfoHandler.UpdateContactInfo, logging, middleware.CORS, requireAuth))
+	mux.HandleFunc("DELETE /api/v1/admin/contact-info/{id}", middleware.Chain(adminContactInfoHandler.DeleteContactInfo, logging, middleware.CORS, requireAuth))
 
 	// Lead's endpoints (публичные, без авторизации: клиент может только оставить заявку)
 	mux.HandleFunc("POST /api/v1/leads", middleware.Chain(leadHandler.CreateLead, logging, middleware.CORS, leadRateLimit))
