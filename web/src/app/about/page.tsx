@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { aboutCopy, positioning } from "@/content/positioning";
 import { MagneticLink } from "@/components/ui/magnetic-button";
+import { legalEntityPlaceholder } from "@/content/contacts";
 
 export const metadata: Metadata = {
   title: "О студии",
@@ -17,6 +18,10 @@ export default function AboutPage() {
             {aboutCopy.title}
           </h1>
           <p className="prose-mute mt-6 max-w-2xl text-base leading-relaxed">{aboutCopy.body}</p>
+          <p className="mt-4 text-sm text-[var(--porcelain-muted)]">
+            Юрлицо: {legalEntityPlaceholder}{" "}
+            <span className="text-[var(--accent)]">(заглушка)</span>
+          </p>
         </div>
       </section>
 
@@ -25,10 +30,23 @@ export default function AboutPage() {
           <div className="lg:col-span-5">
             <h2 className="font-display text-3xl font-semibold">Во что верим</h2>
           </div>
-          <ul className="lg:col-span-7 space-y-4">
+          <ul className="space-y-4 lg:col-span-7">
             {aboutCopy.beliefs.map((b) => (
               <li key={b} className="border-l-2 border-[var(--accent)] pl-5 text-base leading-relaxed">
                 {b}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <section className="section-pad border-t border-[var(--line)] py-16 md:py-24">
+        <div className="container-site">
+          <h2 className="font-display text-3xl font-semibold">Специализации</h2>
+          <ul className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {aboutCopy.specializations.map((s) => (
+              <li key={s} className="border border-[var(--line)] bg-[var(--bg-elevated)] p-4 text-sm">
+                {s}
               </li>
             ))}
           </ul>

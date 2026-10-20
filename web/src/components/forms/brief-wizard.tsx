@@ -8,10 +8,15 @@ import { useMemo, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import {
   budgetRanges,
+  budgetStepHint,
   contactPrefs,
   featureOptions,
+  featuresStepHint,
+  ideaStepHint,
+  productStepHint,
   productTypes,
   projectStages,
+  stageStepHint,
   timelineOptions,
 } from "@/content/brief";
 import { normalizePhone, cn } from "@/lib/utils";
@@ -223,7 +228,7 @@ export function BriefWizard() {
             transition={{ duration: reduced ? 0 : 0.35, ease: [0.23, 1, 0.32, 1] }}
           >
             {index === 0 && (
-              <Step title="Что нужно разработать?">
+              <Step title="Что нужно разработать?" hint={productStepHint}>
                 <ChoiceGrid
                   options={productTypes}
                   value={draft.product}
@@ -232,7 +237,7 @@ export function BriefWizard() {
               </Step>
             )}
             {index === 1 && (
-              <Step title="На какой стадии проект?">
+              <Step title="На какой стадии проект?" hint={stageStepHint}>
                 <ChoiceGrid
                   options={projectStages}
                   value={draft.stage}
@@ -241,10 +246,7 @@ export function BriefWizard() {
               </Step>
             )}
             {index === 2 && (
-              <Step
-                title="Какие возможности необходимы?"
-                hint="Можно выбрать несколько вариантов"
-              >
+              <Step title="Какие возможности необходимы?" hint={featuresStepHint}>
                 <ChoiceGrid
                   multiple
                   options={featureOptions}
@@ -261,10 +263,7 @@ export function BriefWizard() {
               </Step>
             )}
             {index === 3 && (
-              <Step
-                title="Опишите идею"
-                hint="Подробное ТЗ необязательно — достаточно задачи, которую должен решать продукт"
-              >
+              <Step title="Опишите идею" hint={ideaStepHint}>
                 <textarea
                   className="min-h-40 w-full border border-[var(--line)] bg-[var(--bg)] p-4 text-base"
                   value={draft.idea}
@@ -283,10 +282,7 @@ export function BriefWizard() {
               </Step>
             )}
             {index === 5 && (
-              <Step
-                title="Ориентир по бюджету"
-                hint="Диапазоны настраиваемые и не являются офертой. Можно выбрать «Нужна оценка»."
-              >
+              <Step title="Ориентир по бюджету" hint={budgetStepHint}>
                 <ChoiceGrid
                   options={budgetRanges}
                   value={draft.budget}

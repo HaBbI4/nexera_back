@@ -1,37 +1,19 @@
 import type { Metadata } from "next";
 import { QuickContactForm } from "@/components/forms/quick-contact";
-import { getContactInfo, type ContactInfo } from "@/lib/api";
 import { MagneticLink } from "@/components/ui/magnetic-button";
+import {
+  contactsBanner,
+  getDisplayContacts,
+  legalEntityPlaceholder,
+} from "@/content/contacts";
 
 export const metadata: Metadata = {
   title: "Контакты",
-  description: "Связаться со студией Nexera — форма и опубликованные каналы связи.",
+  description: "Связаться со студией Nexera — форма и каналы связи.",
 };
 
-function hrefFor(item: ContactInfo): string | null {
-  if (!item.value) return null;
-  switch (item.type) {
-    case "phone":
-      return `tel:${item.value.replace(/\s/g, "")}`;
-    case "email":
-      return `mailto:${item.value}`;
-    case "telegram":
-      return item.value.startsWith("http")
-        ? item.value
-        : `https://t.me/${item.value.replace(/^@/, "")}`;
-    case "whatsapp":
-      return item.value.startsWith("http")
-        ? item.value
-        : `https://wa.me/${item.value.replace(/\D/g, "")}`;
-    case "vk":
-      return item.value.startsWith("http") ? item.value : `https://vk.com/${item.value}`;
-    default:
-      return item.value;
-  }
-}
-
-export default async function ContactPage() {
-  const contacts = await getContactInfo();
+export default function ContactPage() {
+  const contacts = getDisplayContacts();
 
   return (
     <div className="pt-[var(--header-h)]">
@@ -51,33 +33,30 @@ export default async function ContactPage() {
         <div className="container-site grid gap-14 lg:grid-cols-12">
           <div className="lg:col-span-5">
             <h2 className="font-display text-2xl font-semibold">Каналы связи</h2>
-            {contacts.length === 0 ? (
-              <p className="prose-mute mt-4 text-sm leading-relaxed">
-                Публичные контакты ещё не опубликованы в API (`contact_info`). Заполните их в
-                админке или см. CONTENT_REQUIRED.md. Пока удобнее оставить заявку формой.
-              </p>
-            ) : (
-              <ul className="mt-6 space-y-3">
-                {contacts.map((c) => {
-                  const href = hrefFor(c);
-                  const label = c.label || c.value || c.type;
-                  return (
-                    <li key={c.id}>
-                      {href ? (
-                        <a href={href} className="text-lg hover:text-[var(--accent)]">
-                          {label}
-                        </a>
-                      ) : (
-                        <span className="text-lg">{label}</span>
-                      )}
-                      <span className="ml-2 text-xs uppercase tracking-[0.14em] text-[var(--porcelain-muted)]">
-                        {c.type}
-                      </span>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
+            <p className="mt-2 text-[10px] uppercase tracking-[0.16em] text-[var(--accent)]">
+              Макетные данные · isMock
+            </p>
+            <p className="prose-mute mt-4 text-sm leading-relaxed">{contactsBanner}</p>
+            <ul className="mt-6 space-y-4">
+              {contacts.map((c) => (
+                <li key={c.id}>
+                  <p className="text-xs uppercase tracking-[0.14em] text-[var(--porcelain-muted)]">
+                    {c.label}
+                    {c.isMock ? " · mock" : ""}
+                  </p>
+                  {c.href && c.href !== "#" ? (
+                    <a href={c.href} className="text-lg hover:text-[var(--accent)]">
+                      {c.value}
+                    </a>
+                  ) : (
+                    <span className="text-lg">{c.value}</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+            <p className="prose-mute mt-6 text-sm">
+              Юрлицо: <span className="text-[var(--porcelain)]">{legalEntityPlaceholder}</span>
+            </p>
             <MagneticLink href="/brief" className="mt-10" variant="ghost">
               Открыть подробный бриф
             </MagneticLink>

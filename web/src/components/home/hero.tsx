@@ -31,8 +31,8 @@ export function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: reduced ? 0 : 0.55, duration: 0.6 }}
           >
-            Проектируем и разрабатываем веб-приложения, мобильные продукты и SaaS:
-            стратегия, UX/UI, инженерия и развитие после запуска.
+            Корпоративные сайты, магазины, лендинги, веб- и мобильные приложения, SaaS и
+            интеграции — от стратегии и UX до запуска и поддержки.
           </motion.p>
           <motion.div
             className="mt-10 flex flex-wrap gap-3"

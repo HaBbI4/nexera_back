@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Outfit, Syne } from "next/font/google";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
-import { getContactInfo } from "@/lib/api";
+import { OrganizationJsonLd } from "@/components/seo/organization-json-ld";
 import { site } from "@/lib/site";
 import "./globals.css";
 
@@ -37,19 +37,18 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const contacts = await getContactInfo();
-
   return (
     <html lang="ru">
       <body className={`${syne.variable} ${outfit.variable} antialiased`}>
+        <OrganizationJsonLd />
         <SiteHeader />
         <main id="main">{children}</main>
-        <SiteFooter contacts={contacts} />
+        <SiteFooter />
       </body>
     </html>
   );

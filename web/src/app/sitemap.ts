@@ -1,9 +1,9 @@
 import type { MetadataRoute } from "next";
-import { getServices, serviceSlug } from "@/lib/api";
+import { casesCatalog } from "@/content/cases";
+import { servicesCatalog } from "@/content/services";
 import { site } from "@/lib/site";
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const services = await getServices();
+export default function sitemap(): MetadataRoute.Sitemap {
   const staticRoutes = ["", "/services", "/cases", "/about", "/contact", "/brief", "/privacy"].map(
     (path) => ({
       url: `${site.url}${path}`,
@@ -13,12 +13,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }),
   );
 
-  const serviceRoutes = services.map((s) => ({
-    url: `${site.url}/services/${serviceSlug(s)}`,
+  const serviceRoutes = servicesCatalog.map((s) => ({
+    url: `${site.url}/services/${s.slug}`,
     lastModified: new Date(),
     changeFrequency: "weekly" as const,
     priority: 0.6,
   }));
 
-  return [...staticRoutes, ...serviceRoutes];
+  // Demo cases: listed but low priority; robots noindex on detail when demo
+  const caseRoutes = casesCatalog.map((c) => ({
+    url: `${site.url}/cases/${c.slug}`,
+    lastModified: new Date(),
+    changeFrequency: "monthly" as const,
+    priority: c.demo ? 0.3 : 0.6,
+  }));
+
+  return [...staticRoutes, ...serviceRoutes, ...caseRoutes];
 }

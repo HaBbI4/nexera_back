@@ -1,32 +1,16 @@
-/** Inspired by 21st Agency Footer (id 21474) — multi-column sitemap, real contacts only. */
+/** Inspired by 21st Agency Footer (21474) — multi-column sitemap. */
 import Link from "next/link";
 import { site } from "@/lib/site";
-import type { ContactInfo } from "@/lib/api";
+import {
+  contactsBanner,
+  getDisplayContacts,
+  legalEntityPlaceholder,
+} from "@/content/contacts";
 
-function contactHref(item: ContactInfo): string | null {
-  if (!item.value) return null;
-  switch (item.type) {
-    case "phone":
-      return `tel:${item.value.replace(/\s/g, "")}`;
-    case "email":
-      return `mailto:${item.value}`;
-    case "telegram":
-      return item.value.startsWith("http")
-        ? item.value
-        : `https://t.me/${item.value.replace(/^@/, "")}`;
-    case "whatsapp":
-      return item.value.startsWith("http")
-        ? item.value
-        : `https://wa.me/${item.value.replace(/\D/g, "")}`;
-    case "vk":
-      return item.value.startsWith("http") ? item.value : `https://vk.com/${item.value}`;
-    default:
-      return item.value;
-  }
-}
-
-export function SiteFooter({ contacts }: { contacts: ContactInfo[] }) {
+export function SiteFooter() {
   const year = new Date().getFullYear();
+  const contacts = getDisplayContacts().filter((c) => c.type !== "vk");
+
   return (
     <footer className="border-t border-[var(--line)] bg-[var(--bg-elevated)]">
       <div className="section-pad container-site grid gap-12 py-16 md:grid-cols-12">
@@ -37,6 +21,10 @@ export function SiteFooter({ contacts }: { contacts: ContactInfo[] }) {
           </p>
           <p className="prose-mute mt-4 max-w-sm text-sm leading-relaxed">
             {site.description}
+          </p>
+          <p className="mt-4 text-xs text-[var(--porcelain-muted)]">
+            {legalEntityPlaceholder}{" "}
+            <span className="text-[var(--accent)]">(заглушка)</span>
           </p>
         </div>
 
@@ -64,38 +52,33 @@ export function SiteFooter({ contacts }: { contacts: ContactInfo[] }) {
           <p className="text-xs uppercase tracking-[0.18em] text-[var(--porcelain-muted)]">
             Связь
           </p>
-          {contacts.length === 0 ? (
-            <p className="prose-mute mt-4 text-sm">
-              Контакты появятся после публикации в админ-панели. Пока можно{" "}
-              <Link href="/brief" className="text-[var(--accent)] underline-offset-4 hover:underline">
-                оставить бриф
-              </Link>
-              .
-            </p>
-          ) : (
-            <ul className="mt-4 space-y-2">
-              {contacts.map((c) => {
-                const href = contactHref(c);
-                const label = c.label || c.value || c.type;
-                return (
-                  <li key={c.id}>
-                    {href ? (
-                      <a href={href} className="hover:text-[var(--accent)]">
-                        {label}
-                      </a>
-                    ) : (
-                      <span>{label}</span>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+          <p className="mt-2 text-[10px] uppercase tracking-[0.14em] text-[var(--accent)]">
+            Макетные контакты
+          </p>
+          <ul className="mt-4 space-y-2">
+            {contacts.map((c) => (
+              <li key={c.id} className="text-sm">
+                {c.href && c.href !== "#" ? (
+                  <a href={c.href} className="hover:text-[var(--accent)]">
+                    {c.value}
+                  </a>
+                ) : (
+                  <span>{c.value}</span>
+                )}
+                {c.isMock ? (
+                  <span className="ml-2 text-[10px] uppercase tracking-[0.12em] text-[var(--porcelain-muted)]">
+                    mock
+                  </span>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+          <p className="prose-mute mt-4 text-xs leading-relaxed">{contactsBanner}</p>
         </div>
       </div>
       <div className="section-pad container-site flex flex-col gap-2 border-t border-[var(--line)] py-6 text-xs text-[var(--porcelain-muted)] sm:flex-row sm:justify-between">
         <span>
-          © {year} {site.name}
+          © {year} {site.name} · {legalEntityPlaceholder}
         </span>
         <span>Разработка цифровых продуктов</span>
       </div>

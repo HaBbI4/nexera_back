@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
+import { legalEntityPlaceholder } from "@/content/contacts";
 
 export const metadata: Metadata = {
   title: "Политика обработки данных",
   description: "Информация об обработке персональных данных при отправке заявок на сайте Nexera.",
-  robots: { index: true, follow: true },
 };
 
 export default function PrivacyPage() {
@@ -15,17 +15,18 @@ export default function PrivacyPage() {
             Политика обработки данных
           </h1>
           <p>
-            Этот текст — рабочая заглушка до утверждения юридической редакции компании. При
-            отправке форм (`/brief`, `/contact` и быстрый контакт) вы передаёте имя, телефон и
-            необязательные email/описание задачи.
+            Оператор: <strong className="text-[var(--porcelain)]">{legalEntityPlaceholder}</strong>{" "}
+            — юридическая заглушка до утверждения реквизитов.
           </p>
           <p>
-            Данные сохраняются в backend Nexera (`leads`) для обработки обращения. Не передавайте
-            в формах избыточные персональные сведения.
+            При отправке форм (`/brief`, `/contact` и быстрый контакт) вы передаёте имя, телефон и
+            необязательные email/описание задачи. Данные сохраняются в backend Nexera (`leads`) для
+            обработки обращения.
           </p>
           <p>
-            Полный документ политики, реквизиты оператора и сроки хранения нужно предоставить
-            команде — см. <code className="text-[var(--porcelain)]">docs/CONTENT_REQUIRED.md</code>.
+            Не передавайте избыточные персональные сведения. Полный документ политики, ИНН/ОГРН,
+            адрес оператора и сроки хранения нужно заменить утверждённой редакцией — см.
+            CONTENT_REQUIRED.md.
           </p>
         </article>
       </section>

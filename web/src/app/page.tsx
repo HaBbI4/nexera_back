@@ -8,26 +8,34 @@ import { FaqSection } from "@/components/home/faq-section";
 import { FinalCta } from "@/components/home/final-cta";
 import { QuickContactForm } from "@/components/forms/quick-contact";
 import { Reveal } from "@/components/ui/reveal";
-import { aboutCopy } from "@/content/positioning";
-import { getFaqs, getReviews, getReviewSummary, getServices } from "@/lib/api";
+import { aboutCopy, fallbackFaq } from "@/content/positioning";
+import { servicesCatalog } from "@/content/services";
+import { getPublishedCases } from "@/content/cases";
+import { getFaqs, getReviews, getReviewSummary } from "@/lib/api";
 
 export default async function HomePage() {
-  const [services, faqs, reviews, summary] = await Promise.all([
-    getServices(),
+  const [apiFaqs, reviews, summary] = await Promise.all([
     getFaqs(),
     getReviews(),
     getReviewSummary(),
   ]);
 
-  // Cases entity does not exist in backend yet — never invent.
-  const cases: [] = [];
+  const faqs =
+    apiFaqs.length > 0
+      ? apiFaqs
+      : fallbackFaq.map((f, i) => ({
+          id: i + 1,
+          question: f.question,
+          answer: f.answer,
+          position: i,
+        }));
 
   return (
     <>
       <Hero />
       <PositioningSection />
-      <ServicesSection services={services} />
-      <CasesSection cases={cases} />
+      <ServicesSection services={servicesCatalog} />
+      <CasesSection cases={getPublishedCases()} />
       <ProcessSection />
       <WhySection />
 
@@ -46,7 +54,7 @@ export default async function HomePage() {
               Подробнее о подходе →
             </a>
           </Reveal>
-          <ul className="lg:col-span-7 space-y-4">
+          <ul className="space-y-4 lg:col-span-7">
             {aboutCopy.beliefs.map((b) => (
               <li
                 key={b}
@@ -64,8 +72,7 @@ export default async function HomePage() {
           <div className="container-site">
             <p className="text-xs uppercase tracking-[0.2em] text-[var(--accent)]">Отзывы</p>
             <h2 className="font-display mt-4 text-3xl font-semibold">
-              {summary.average_rating.toFixed(1)} из 5 · {summary.count}{" "}
-              {summary.count === 1 ? "отзыв" : "отзывов"}
+              {summary.average_rating.toFixed(1)} из 5 · {summary.count} отзывов
             </h2>
             <ul className="mt-10 grid gap-4 md:grid-cols-2">
               {reviews.slice(0, 4).map((r) => (
@@ -92,7 +99,8 @@ export default async function HomePage() {
               Коротко опишите задачу
             </h2>
             <p className="prose-mute mt-4 text-sm leading-relaxed">
-              Заявка уходит в backend (`POST /api/v1/leads`) и доступна в админке. Без имитации успеха.
+              Заявка уходит в backend (`POST /api/v1/leads`). Макетные контакты в футере не заменяют
+              форму.
             </p>
           </div>
           <div className="lg:col-span-7">
