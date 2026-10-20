@@ -25,6 +25,10 @@ type ServerConfig struct {
 	Port         string `json:"port"`
 	ReadTimeout  int    `json:"read_timeout"`
 	WriteTimeout int    `json:"write_timeout"`
+	// CORSAllowedOrigins — Origin фронтенда (nexera_front), которым разрешён cross-origin доступ.
+	// По умолчанию локальный Next.js. В prod добавьте публичный URL сайта через CORS_ALLOWED_ORIGINS.
+	// Элемент "*" разрешает любой Origin (прежнее поведение).
+	CORSAllowedOrigins []string `json:"cors_allowed_origins"`
 }
 
 // DatabaseConfig конфигурация базы данных
@@ -143,6 +147,10 @@ func Load() *Config {
 			Port:         getEnv("SERVER_PORT", "8080"),
 			WriteTimeout: getEnvAsInt("SERVER_WRITE_TIMEOUT", 10),
 			ReadTimeout:  getEnvAsInt("SERVER_READ_TIMEOUT", 10),
+			CORSAllowedOrigins: getEnvAsList(
+				"CORS_ALLOWED_ORIGINS",
+				"http://localhost:3000,http://127.0.0.1:3000",
+			),
 		},
 		Database: DatabaseConfig{
 			Host:     getEnv("DB_HOST", "127.0.0.1"),

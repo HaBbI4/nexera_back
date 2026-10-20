@@ -48,6 +48,10 @@ func main() {
 		log.Fatal("JWT_SECRET is required")
 	}
 
+	// CORS для отдельного фронтенда (nexera_front): localhost:3000 + CORS_ALLOWED_ORIGINS.
+	middleware.InitCORS(cfg.Server.CORSAllowedOrigins)
+	log.WithField("cors_origins", cfg.Server.CORSAllowedOrigins).Info("CORS allowed origins configured")
+
 	// Подключение к базе данных
 	db, err := database.Connect(&cfg.Database, log)
 	if err != nil {

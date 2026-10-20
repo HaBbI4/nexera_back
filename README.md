@@ -1,63 +1,41 @@
-# Nexera
+# Nexera Back
 
-Маркетинговый сайт студии цифровых продуктов + backend сайта-визитки.
+Backend сайта-визитки IT-компании: баннеры, услуги, FAQ, контакты, отзывы, заявки (лиды), JWT-админка, Telegram-бот (в разработке).
 
-## Структура
-
-| Путь | Назначение |
-|---|---|
-| `nexera_back/` | Go API, Postgres, Redis, админка, заявки |
-| `nexera_back/web/` | Next.js App Router — публичный сайт |
-| `docs/` | Аудит фронтенда, контент-дыры, 21st-отчёт |
+Публичный маркетинговый сайт вынесен в отдельный проект: **`nexera_front`**
+(`c:\Users\X\Desktop\Road to Programming\nexera\nexera_front`, GitHub: создать `HaBbI4/nexera_front` при необходимости).
 
 ## Быстрый старт
 
-### 1. Backend
-
-См. подробности в `nexera_back/CLAUDE.md`.
+См. подробности в `CLAUDE.md`.
 
 ```bash
-cd nexera_back
-cp .env.example .env   # задать JWT_SECRET
+cp .env.example .env   # задать JWT_SECRET; при необходимости CORS_ALLOWED_ORIGINS
 make dev-up            # postgres + redis
 make migrate-up
 make run               # :8080
 ```
 
-### 2. Frontend
+### CORS для nexera_front
 
-```bash
-cd nexera_back/web
-cp .env.example .env.local
-npm install
-npm run dev            # :3000, /api/* → localhost:8080
+Фронтенд на отдельном origin (например `http://localhost:3000`). Разрешённые Origin:
+
+```env
+CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+# production:
+# CORS_ALLOWED_ORIGINS=http://localhost:3000,https://your-site.example
 ```
 
-Переменные:
+`*` — разрешить любой Origin (прежнее поведение).
 
-- `NEXT_PUBLIC_SITE_URL` — канонический URL сайта
-- `API_INTERNAL_URL` — куда Next проксирует `/api` и `/media` (по умолчанию `http://localhost:8080`)
+## Публичные формы
 
-### Сборка фронтенда
+- `POST /api/v1/leads` — заявки с сайта
+- `GET /api/v1/contact-info` — контакты для витрины
+- Инструкция для фронта: `docs/frontend-forms.md` (копия также в `nexera_front/docs/`)
 
-```bash
-cd nexera_back/web
-npm run build
-npm start
-```
+## Документы (backend)
 
-## Формы заявок
-
-- Быстрый контакт и бриф → `POST /api/v1/leads` из браузера (honeypot `website`, rate limit).
-- `source`: `quick_contact` | `project_brief` | `contact_form` | `case_cta`
-- Инструкция: `nexera_back/docs/frontend-forms.md`
-
-## Документы
-
-- `docs/FRONTEND_AUDIT.md` — аудит backend / план интеграции
-- `docs/CONTENT_REQUIRED.md` — что заполнить вручную
-- `docs/21ST_COMPONENTS.md` — компоненты 21st.dev (CLI; MCP в agent session не был виден)
-
-## Дизайн
-
-Направление **Signal Forge**: graphite + porcelain + electric mint, шрифты Syne / Outfit.
+- `CLAUDE.md` — архитектура и соглашения
+- `docs/frontend-forms.md` — контракт лидов/отзывов
+- Аудит и контент маркетингового сайта — в **`nexera_front/docs/`**
