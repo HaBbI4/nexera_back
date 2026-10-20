@@ -26,3 +26,22 @@ type ContactInfo struct {
 	Value *string         `json:"value,omitempty" db:"value"`
 	Label *string         `json:"label,omitempty" db:"label"`
 }
+
+// CreateContactInfoRequest представляет запрос на создание контактной записи
+type CreateContactInfoRequest struct {
+	Type        ContactInfoType `json:"type"`
+	Value       string          `json:"value"`
+	Label       *string         `json:"label"`
+	Position    int             `json:"position"`
+	IsPublished bool            `json:"is_published"`
+}
+
+// UpdateContactInfoRequest представляет PATCH-запрос на обновление контактной записи: nil-поле значит
+// "не менять", присутствующее — новое значение.
+type UpdateContactInfoRequest struct {
+	Type        *ContactInfoType `json:"type"`
+	Value       *string          `json:"value"`
+	Label       *string          `json:"label"`
+	Position    *int             `json:"position"`
+	IsPublished *bool            `json:"is_published"`
+}

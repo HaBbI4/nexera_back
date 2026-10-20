@@ -177,5 +177,6 @@ const (
 	KeyPrefixService = "service"
 	KeyPrefixBanner  = "banner"
 	KeyPrefixPage    = "page"
-	KeyPrefixFAQ     = "faq"
+	KeyPrefixFAQ         = "faq"
+	KeyPrefixContactInfo = "contact_info"
 )
